@@ -1,0 +1,68 @@
+from flask import Flask, redirect, url_for
+from flask_login import LoginManager
+from sqlalchemy import inspect, text
+from models import db, User
+from config import config
+import os
+
+def create_app(config_name=None):
+    """Application factory function"""
+    if config_name is None:
+        config_name = os.environ.get('FLASK_ENV', 'development')
+    
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
+    
+    # Initialize extensions
+    db.init_app(app)
+    
+    # Initialize login manager
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
+    # Register blueprints
+    from routes.auth import auth_bp
+    from routes.dashboard import dashboard_bp
+    from routes.patients import patients_bp
+    from routes.follow_ups import follow_ups_bp
+    from routes.assessments import assessments_bp
+    from routes.chat import chat_bp
+    
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(patients_bp)
+    app.register_blueprint(follow_ups_bp)
+    app.register_blueprint(assessments_bp)
+    app.register_blueprint(chat_bp)
+
+    @app.route('/')
+    def home():
+        return redirect(url_for('dashboard.index'))
+    
+    # Create database tables and apply schema upgrades
+    with app.app_context():
+        db.create_all()
+        inspector = inspect(db.engine)
+        if "message" in inspector.get_table_names():
+            existing = {col["name"] for col in inspector.get_columns("message")}
+            for name, col_type in [
+                ("attachment_filename", "VARCHAR(255)"),
+                ("attachment_type", "VARCHAR(100)"),
+                ("attachment_url", "VARCHAR(255)")
+            ]:
+                if name not in existing:
+                    with db.engine.connect() as conn:
+                        conn.execute(text(f"ALTER TABLE message ADD COLUMN {name} {col_type}"))
+        if "patient" in inspector.get_table_names():
+            existing_patient = {col["name"] for col in inspector.get_columns("patient")}
+            if "user_id" not in existing_patient:
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE patient ADD COLUMN user_id INTEGER"))
+    
+    return app

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Details - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2><i class="fas fa-user"></i> {{ patient.get_full_name() }}</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}" class="btn btn-info me-2">
+            <i class="fas fa-comments"></i> Chat
+        </a>
+        <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        {% if patient.is_active %}
+        <form method="POST" action="{{ url_for('patients.discharge_patient', patient_id=patient.id) }}" style="display: inline;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to discharge this patient?');">
+                <i class="fas fa-sign-out-alt"></i> Discharge
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Patient Information Card -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>MRN:</strong> {{ patient.mrn }}</p>
+                        <p><strong>Age:</strong> {{ patient.get_age() }} years</p>
+                        <p><strong>Gender:</strong> {{ patient.gender }}</p>
+                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                        <p><strong>Email:</strong> {{ patient.email or 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Surgery Date:</strong> {{ patient.surgery_date.strftime('%B %d, %Y') }}</p>
+                        <p><strong>Days Post-Op:</strong> {{ patient.days_post_surgery() }} days</p>
+                        <p><strong>Surgery Type:</strong> {{ patient.surgery_type or 'N/A' }}</p>
+                        <p><strong>Surgeon:</strong> {{ patient.surgeon_name or 'N/A' }}</p>
+                        <p><strong>Incision Type:</strong> {{ patient.incision_type or 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Follow-ups Section -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h5 class="mb-0">Follow-ups</h5>
+                <a href="{{ url_for('follow_ups.create_follow_up', patient_id=patient.id) }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus"></i> Schedule New
+                </a>
+            </div>
+            <div class="card-body">
+                {% if follow_ups %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for follow_up in follow_ups %}
+                            <tr>
+                                <td>{{ follow_up.follow_up_date.strftime('%b %d, %Y %H:%M') }}</td>
+                                <td>{{ follow_up.follow_up_type }}</td>
+                                <td>{{ follow_up.visit_location or 'N/A' }}</td>
+                                <td>
+                                    {% if follow_up.is_completed %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No follow-ups scheduled yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assessments Section -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h5 class="mb-0">Wound Assessments</h5>
+                <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus"></i> New Assessment
+                </a>
+            </div>
+            <div class="card-body">
+                {% if assessments %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Pain Level</th>
+                                <th>Infection Signs</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assessment in assessments %}
+                            <tr>
+                                <td>{{ assessment.assessment_date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if assessment.status.value == 'excellent' else 'info' if assessment.status.value == 'good' else 'warning' if assessment.status.value == 'fair' else 'danger' }}">
+                                        {{ assessment.status.value.capitalize() }}
+                                    </span>
+                                </td>
+                                <td>{{ assessment.pain_level }}/10</td>
+                                <td>
+                                    {% if assessment.infection_signs %}
+                                    <span class="badge bg-danger">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-success">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('assessments.view_assessment', assessment_id=assessment.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No assessments recorded yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Medications Section -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Active Medications</h5>
+            </div>
+            <div class="card-body">
+                {% if medications %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Medication</th>
+                                <th>Dosage</th>
+                                <th>Frequency</th>
+                                <th>Route</th>
+                                <th>Indication</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in medications %}
+                            <tr>
+                                <td>{{ med.medication_name }}</td>
+                                <td>{{ med.dosage }}</td>
+                                <td>{{ med.frequency }}</td>
+                                <td>{{ med.route }}</td>
+                                <td>{{ med.indication }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No active medications</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Status Card -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Status</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if patient.is_active %}
+                <span class="badge bg-success" style="font-size: 1.1rem; padding: 10px 20px;">ACTIVE</span>
+                {% else %}
+                <span class="badge bg-secondary" style="font-size: 1.1rem; padding: 10px 20px;">DISCHARGED</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Statistics</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Follow-ups:</strong> {{ follow_ups|length }}</p>
+                <p><strong>Total Assessments:</strong> {{ assessments|length }}</p>
+                <p><strong>Active Medications:</strong> {{ medications|length }}</p>
+                <p><strong>Registered Since:</strong> {{ patient.created_at.strftime('%b %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

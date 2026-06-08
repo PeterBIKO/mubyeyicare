@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Provider Dashboard - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-number">{{ total_patients }}</div>
+            <div class="stat-label"><i class="fas fa-chart-line"></i> Total Patients</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-procedures"></i></div>
+            <div class="stat-number">{{ discharged_patients }}</div>
+            <div class="stat-label"><i class="fas fa-door-open"></i> Discharged Patients</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-notes-medical"></i></div>
+            <div class="stat-number">{{ active_follow_ups }}</div>
+            <div class="stat-label"><i class="fas fa-heartbeat"></i> Active Follow-ups</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users-cog"></i></div>
+            <div class="stat-number">{{ total_users }}</div>
+            <div class="stat-label"><i class="fas fa-user-friends"></i> Total Users</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Follow-ups</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_follow_ups %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for follow_up in recent_follow_ups %}
+                            <tr>
+                                <td>{{ follow_up.patient.get_full_name() }}</td>
+                                <td>{{ follow_up.follow_up_date.strftime('%b %d, %Y %H:%M') }}</td>
+                                <td>{{ follow_up.follow_up_type }}</td>
+                                <td>
+                                    {% if follow_up.is_completed %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">No follow-ups yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-circle"></i> Active Alerts</h5>
+            </div>
+            <div class="card-body">
+                {% if alerts %}
+                <div class="list-group list-group-flush">
+                    {% for alert in alerts %}
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="mb-1">{{ alert.alert_type }}</h6>
+                                <p class="mb-1 small text-muted">{{ alert.message }}</p>
+                                <small class="text-muted">{{ alert.created_at.strftime('%b %d, %Y') }}</small>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if alert.severity == 'Critical' else 'warning' }}">
+                                {{ alert.severity }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">No active alerts</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('patients.create_patient') }}" class="btn btn-primary w-100 mb-2">
+                    <i class="fas fa-user-plus"></i> Add New Patient
+                </a>
+                <a href="{{ url_for('patients.list_patients') }}" class="btn btn-info w-100 mb-2">
+                    <i class="fas fa-list"></i> View All Patients
+                </a>
+                <a href="{{ url_for('dashboard.analytics') }}" class="btn btn-success w-100">
+                    <i class="fas fa-chart-bar"></i> View Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

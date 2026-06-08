@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Follow-up Details - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2><i class="fas fa-calendar"></i> Follow-up Details</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if not follow_up.is_completed %}
+        <a href="{{ url_for('follow_ups.edit_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{{ url_for('follow_ups.complete_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-success">
+            <i class="fas fa-check"></i> Complete
+        </a>
+        {% endif %}
+        <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Follow-up Information -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Follow-up Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Patient:</strong> <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}">{{ patient.get_full_name() }}</a></p>
+                        <p><strong>MRN:</strong> {{ patient.mrn }}</p>
+                        <p><strong>Date:</strong> {{ follow_up.follow_up_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        <p><strong>Type:</strong> <span class="badge bg-info">{{ follow_up.follow_up_type }}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Location:</strong> {{ follow_up.visit_location or 'Not specified' }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if follow_up.is_completed %}
+                            <span class="badge bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Created By:</strong> {{ follow_up.created_by.get_full_name() }}</p>
+                        <p><strong>Scheduled:</strong> {{ follow_up.created_at.strftime('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Notes -->
+        {% if follow_up.notes %}
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Clinical Notes</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ follow_up.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Wound Assessment (if exists) -->
+        {% if follow_up.wound_assessment %}
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h5 class="mb-0">Associated Wound Assessment</h5>
+                <a href="{{ url_for('assessments.view_assessment', assessment_id=follow_up.wound_assessment.id) }}" class="btn btn-sm btn-light">View</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong> <span class="badge bg-{{ 'success' if follow_up.wound_assessment.status.value == 'excellent' else 'info' if follow_up.wound_assessment.status.value == 'good' else 'warning' if follow_up.wound_assessment.status.value == 'fair' else 'danger' }}">{{ follow_up.wound_assessment.status.value.capitalize() }}</span></p>
+                        <p><strong>Pain Level:</strong> {{ follow_up.wound_assessment.pain_level }}/10</p>
+                        <p><strong>Infection Signs:</strong> {% if follow_up.wound_assessment.infection_signs %}<span class="badge bg-danger">Yes</span>{% else %}<span class="badge bg-success">No</span>{% endif %}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Redness:</strong> {% if follow_up.wound_assessment.redness_present %}<span class="badge bg-warning">Yes</span>{% else %}<span class="badge bg-success">No</span>{% endif %}</p>
+                        <p><strong>Swelling:</strong> {% if follow_up.wound_assessment.swelling_present %}<span class="badge bg-warning">Yes</span>{% else %}<span class="badge bg-success">No</span>{% endif %}</p>
+                        <p><strong>Discharge:</strong> {% if follow_up.wound_assessment.discharge_present %}<span class="badge bg-warning">Yes</span>{% else %}<span class="badge bg-success">No</span>{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Vital Signs (if recorded) -->
+        {% if follow_up.vital_signs %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Vital Signs</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>BP:</strong> {{ follow_up.vital_signs.blood_pressure_systolic }}/{{ follow_up.vital_signs.blood_pressure_diastolic }} mmHg</p>
+                        <p><strong>Heart Rate:</strong> {{ follow_up.vital_signs.heart_rate }} bpm</p>
+                        <p><strong>Temperature:</strong> {{ follow_up.vital_signs.temperature }}°C</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Respiratory Rate:</strong> {{ follow_up.vital_signs.respiratory_rate }} breaths/min</p>
+                        <p><strong>O₂ Saturation:</strong> {{ follow_up.vital_signs.oxygen_saturation }}%</p>
+                        <p><strong>Weight:</strong> {{ follow_up.vital_signs.weight }} kg</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Patient Quick Info -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Patient Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Age:</strong> {{ patient.get_age() }} years</p>
+                <p><strong>Days Post-Op:</strong> {{ patient.days_post_surgery() }}</p>
+                <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                <p><strong>Email:</strong> {{ patient.email or 'N/A' }}</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        {% if not follow_up.is_completed %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if not follow_up.wound_assessment %}
+                    <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}?follow_up_id={{ follow_up.id }}" class="btn btn-info">
+                        <i class="fas fa-plus"></i> Add Assessment
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('follow_ups.complete_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-success">
+                        <i class="fas fa-check"></i> Complete Follow-up
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

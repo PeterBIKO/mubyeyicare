@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Create Wound Assessment - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Wound Assessment - {{ patient.get_full_name() }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}">
+                    <h6 class="mb-3">Assessment Details</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Wound Status *</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="">Select Status</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="good">Good</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                                <option value="infected">Infected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="pain_level" class="form-label">Pain Level (0-10) *</label>
+                            <input type="number" class="form-control" id="pain_level" name="pain_level" min="0" max="10" required>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3">Wound Characteristics</h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="redness_present" name="redness_present">
+                                <label class="form-check-label" for="redness_present">
+                                    Redness Present
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="swelling_present" name="swelling_present">
+                                <label class="form-check-label" for="swelling_present">
+                                    Swelling Present
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="discharge_present" name="discharge_present">
+                                <label class="form-check-label" for="discharge_present">
+                                    Discharge Present
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="dehiscence_present" name="dehiscence_present">
+                                <label class="form-check-label" for="dehiscence_present">
+                                    Dehiscence Present
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="infection_signs" name="infection_signs">
+                                <label class="form-check-label" for="infection_signs">
+                                    Signs of Infection
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="discharge_type" class="form-label">Discharge Type</label>
+                            <input type="text" class="form-control" id="discharge_type" name="discharge_type" placeholder="e.g., Serosanguinous">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="incision_length" class="form-label">Incision Length (cm)</label>
+                            <input type="number" class="form-control" id="incision_length" name="incision_length" step="0.1">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="wound_depth" class="form-label">Wound Depth (mm)</label>
+                            <input type="number" class="form-control" id="wound_depth" name="wound_depth" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="healing_progress" class="form-label">Healing Progress</label>
+                        <select class="form-select" id="healing_progress" name="healing_progress">
+                            <option value="">Select Progress</option>
+                            <option value="On track">On Track</option>
+                            <option value="Slightly delayed">Slightly Delayed</option>
+                            <option value="Significantly delayed">Significantly Delayed</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="observations" class="form-label">Clinical Observations</label>
+                        <textarea class="form-control" id="observations" name="observations" rows="4"></textarea>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="mb-3">Treatment Recommendations</h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="dressing_change_needed" name="dressing_change_needed">
+                                <label class="form-check-label" for="dressing_change_needed">
+                                    Dressing Change Needed
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="antibiotic_prescribed" name="antibiotic_prescribed">
+                                <label class="form-check-label" for="antibiotic_prescribed">
+                                    Antibiotic Prescribed
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dressing_type" class="form-label">Dressing Type</label>
+                            <input type="text" class="form-control" id="dressing_type" name="dressing_type" placeholder="e.g., Sterile Gauze">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="follow_up_id" class="form-label">Associated Follow-up</label>
+                        <select class="form-select" id="follow_up_id" name="follow_up_id">
+                            <option value="">Select Follow-up (Optional)</option>
+                            {% for fu in follow_ups %}
+                            <option value="{{ fu.id }}">{{ fu.follow_up_date.strftime('%b %d, %Y %H:%M') }} - {{ fu.follow_up_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Assessment
+                        </button>
+                        <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

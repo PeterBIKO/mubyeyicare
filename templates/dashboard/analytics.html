@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4"><i class="fas fa-chart-bar"></i> Wound Healing Analytics</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_assessments }}</div>
+            <div class="stat-label">Total Assessments</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #27ae60;">{{ stats.excellent }}</div>
+            <div class="stat-label">Excellent</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #3498db;">{{ stats.good }}</div>
+            <div class="stat-label">Good</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #f39c12;">{{ stats.fair }}</div>
+            <div class="stat-label">Fair</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #e67e22;">{{ stats.poor }}</div>
+            <div class="stat-label">Poor</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #e74c3c;">{{ stats.infected }}</div>
+            <div class="stat-label">Infected</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Wound Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Status Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Excellent:</strong></td>
+                        <td class="text-end">{{ stats.excellent }} ({{ ((stats.excellent / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Good:</strong></td>
+                        <td class="text-end">{{ stats.good }} ({{ ((stats.good / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fair:</strong></td>
+                        <td class="text-end">{{ stats.fair }} ({{ ((stats.fair / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Poor:</strong></td>
+                        <td class="text-end">{{ stats.poor }} ({{ ((stats.poor / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Infected:</strong></td>
+                        <td class="text-end">{{ stats.infected }} ({{ ((stats.infected / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Excellent', 'Good', 'Fair', 'Poor', 'Infected'],
+            datasets: [{
+                data: [{{ stats.excellent }}, {{ stats.good }}, {{ stats.fair }}, {{ stats.poor }}, {{ stats.infected }}],
+                backgroundColor: ['#27ae60', '#3498db', '#f39c12', '#e67e22', '#e74c3c']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

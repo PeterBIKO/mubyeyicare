@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Wound Assessment - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2><i class="fas fa-clipboard-list"></i> Wound Assessment - {{ patient.get_full_name() }}</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('assessments.edit_assessment', assessment_id=assessment.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{{ url_for('assessments.patient_assessments', patient_id=patient.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Assessment Summary -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Assessment Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Assessment Date:</strong> {{ assessment.assessment_date.strftime('%B %d, %Y') }}</p>
+                        <p><strong>Wound Status:</strong> 
+                            <span class="badge bg-{{ 'success' if assessment.status.value == 'excellent' else 'info' if assessment.status.value == 'good' else 'warning' if assessment.status.value == 'fair' else 'danger' }}" style="font-size: 1.1rem; padding: 5px 10px;">
+                                {{ assessment.status.value.capitalize() }}
+                            </span>
+                        </p>
+                        <p><strong>Pain Level:</strong> <strong>{{ assessment.pain_level }}/10</strong></p>
+                        <p><strong>Healing Progress:</strong> {{ assessment.healing_progress or 'Not recorded' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Days Post-Op:</strong> {{ patient.days_post_surgery() }}</p>
+                        <p><strong>Patient MRN:</strong> {{ patient.mrn }}</p>
+                        {% if assessment.follow_up %}
+                        <p><strong>Associated Follow-up:</strong> <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=assessment.follow_up.id) }}">{{ assessment.follow_up.follow_up_date.strftime('%B %d, %Y') }}</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wound Characteristics -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Wound Characteristics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><i class="fas fa-check-circle"></i> Redness: {% if assessment.redness_present %}<span class="badge bg-warning">Present</span>{% else %}<span class="badge bg-success">Absent</span>{% endif %}</p>
+                        <p><i class="fas fa-check-circle"></i> Swelling: {% if assessment.swelling_present %}<span class="badge bg-warning">Present</span>{% else %}<span class="badge bg-success">Absent</span>{% endif %}</p>
+                        <p><i class="fas fa-check-circle"></i> Discharge: {% if assessment.discharge_present %}<span class="badge bg-warning">Present</span>{% else %}<span class="badge bg-success">Absent</span>{% endif %}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><i class="fas fa-check-circle"></i> Dehiscence: {% if assessment.dehiscence_present %}<span class="badge bg-danger">Present</span>{% else %}<span class="badge bg-success">Absent</span>{% endif %}</p>
+                        <p><i class="fas fa-exclamation-triangle"></i> Infection Signs: {% if assessment.infection_signs %}<span class="badge bg-danger">Yes</span>{% else %}<span class="badge bg-success">No</span>{% endif %}</p>
+                        {% if assessment.discharge_present %}
+                        <p><strong>Discharge Type:</strong> {{ assessment.discharge_type or 'Not specified' }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Measurements -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Measurements</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Incision Length:</strong> {{ assessment.incision_length or 'Not recorded' }} {% if assessment.incision_length %}cm{% endif %}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Wound Depth:</strong> {{ assessment.wound_depth or 'Not recorded' }} {% if assessment.wound_depth %}mm{% endif %}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Pain Level:</strong> <strong>{{ assessment.pain_level }}/10</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observations -->
+        {% if assessment.observations %}
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Clinical Observations</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ assessment.observations }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Treatment Recommendations -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Treatment Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>
+                            <i class="fas fa-bandage"></i> 
+                            <strong>Dressing Change Needed:</strong> 
+                            {% if assessment.dressing_change_needed %}
+                            <span class="badge bg-warning">Yes</span>
+                            {% else %}
+                            <span class="badge bg-success">No</span>
+                            {% endif %}
+                        </p>
+                        {% if assessment.dressing_type %}
+                        <p><strong>Dressing Type:</strong> {{ assessment.dressing_type }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p>
+                            <i class="fas fa-pills"></i> 
+                            <strong>Antibiotic Prescribed:</strong> 
+                            {% if assessment.antibiotic_prescribed %}
+                            <span class="badge bg-warning">Yes</span>
+                            {% else %}
+                            <span class="badge bg-success">No</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Patient Info Card -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ patient.get_full_name() }}</p>
+                <p><strong>Age:</strong> {{ patient.get_age() }} years</p>
+                <p><strong>MRN:</strong> {{ patient.mrn }}</p>
+                <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                <p><strong>Surgery Date:</strong> {{ patient.surgery_date.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+
+        <!-- Assessment Timeline -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Assessment History</h5>
+            </div>
+            <div class="card-body">
+                <small class="text-muted">Created: {{ assessment.created_at.strftime('%B %d, %Y %I:%M %p') }}</small>
+                <br>
+                <small class="text-muted">Last Updated: {{ assessment.updated_at.strftime('%B %d, %Y %I:%M %p') }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

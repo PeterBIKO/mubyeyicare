@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Wound Assessments - {{ patient.get_full_name() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Wound Assessments for {{ patient.get_full_name() }}</h5>
+                    <small class="text-white-50">Review patient wound assessment history and create new assessments.</small>
+                </div>
+                <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-plus-circle"></i> New Assessment
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3"><strong>MRN:</strong> {{ patient.mrn }}</div>
+                    <div class="col-md-3"><strong>Phone:</strong> {{ patient.phone }}</div>
+                    <div class="col-md-3"><strong>Email:</strong> {{ patient.email or 'N/A' }}</div>
+                    <div class="col-md-3"><strong>Status:</strong> {{ 'Active' if patient.is_active else 'Discharged' }}</div>
+                </div>
+                {% if assessments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Infection</th>
+                                <th>Discharge</th>
+                                <th>Pain</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assessment in assessments %}
+                            <tr>
+                                <td>{{ assessment.assessment_date.strftime('%b %d, %Y %H:%M') }}</td>
+                                <td>{{ assessment.status.value.capitalize() }}</td>
+                                <td>{{ 'Yes' if assessment.infection_signs else 'No' }}</td>
+                                <td>{{ assessment.discharge_type or ('Yes' if assessment.discharge_present else 'No') }}</td>
+                                <td>{{ assessment.pain_level or 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ url_for('assessments.view_assessment', assessment_id=assessment.id) }}" class="btn btn-sm btn-secondary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No wound assessments have been recorded for this patient yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

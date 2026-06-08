@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Patient - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Register New Patient</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('patients.create_patient') }}">
+                    <h6 class="mb-3">Personal Information</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="mrn" class="form-label">Medical Record Number (MRN) *</label>
+                            <input type="text" class="form-control" id="mrn" name="mrn" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Gender *</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date_of_birth" class="form-label">Date of Birth *</label>
+                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="mb-3">Cesarean Surgery Details</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="surgery_date" class="form-label">Surgery Date *</label>
+                            <input type="date" class="form-control" id="surgery_date" name="surgery_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="surgery_type" class="form-label">Surgery Type</label>
+                            <input type="text" class="form-control" id="surgery_type" name="surgery_type" placeholder="e.g., Primary Cesarean">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="surgeon_name" class="form-label">Surgeon Name</label>
+                            <input type="text" class="form-control" id="surgeon_name" name="surgeon_name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="incision_type" class="form-label">Incision Type</label>
+                            <select class="form-select" id="incision_type" name="incision_type">
+                                <option value="">Select Incision Type</option>
+                                <option value="Pfannenstiel">Pfannenstiel</option>
+                                <option value="Classical">Classical</option>
+                                <option value="Vertical">Vertical</option>
+                                <option value="T-incision">T-incision</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Register Patient
+                        </button>
+                        <a href="{{ url_for('patients.list_patients') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

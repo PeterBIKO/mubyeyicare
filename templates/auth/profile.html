@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - Post-Cesarean Wound Care System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-circle"></i> My Profile</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3 text-center">
+                        <i class="fas fa-user-circle" style="font-size: 80px; color: #2c3e50;"></i>
+                    </div>
+                    <div class="col-md-9">
+                        <h5>{{ user.get_full_name() }}</h5>
+                        <p class="text-muted">
+                            <strong>Role:</strong> {{ user.role.value.capitalize() }}<br>
+                            <strong>Username:</strong> {{ user.username }}<br>
+                            <strong>Email:</strong> {{ user.email }}<br>
+                            <strong>Phone:</strong> {{ user.phone or 'Not provided' }}<br>
+                            <strong>Joined:</strong> {{ user.created_at.strftime('%B %d, %Y') }}
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>Update Profile</h6>
+                <form method="POST" action="{{ url_for('auth.update_profile') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Profile
+                        </button>
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+
+                {% if user.role.value in ['patient', 'mother'] %}
+                <hr>
+                <div class="mt-4">
+                    {% if user.patient_profile %}
+                        <div class="alert alert-success">
+                            <strong>Patient record linked:</strong> Yes<br>
+                            <strong>Patient name:</strong> {{ user.patient_profile.get_full_name() }}<br>
+                            <strong>MRN:</strong> {{ user.patient_profile.mrn }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <strong>No patient record linked yet.</strong><br>
+                            Please link your account to an existing patient profile so you can access your chat and follow-up details.
+                        </div>
+                        <a href="{{ url_for('auth.link_patient') }}" class="btn btn-info">
+                            <i class="fas fa-link"></i> Link Patient Record
+                        </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
