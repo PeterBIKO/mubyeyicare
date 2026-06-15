@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import or_, func
 from models import db, User, Patient, FollowUp, WoundAssessment, Alert, UserRole, VitalSigns
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 health_education_topics = [
     {
@@ -63,6 +63,22 @@ def provider_dashboard():
         discharged_patients = Patient.query.filter_by(is_active=False).count()
         active_follow_ups = FollowUp.query.filter_by(is_completed=False).count()
         total_users = User.query.count()
+    elif current_user.role == UserRole.CHW:
+        # CHW sees only patients in their location
+        if current_user.location:
+            loc_q = Patient.query.filter_by(location=current_user.location)
+            total_patients = loc_q.count()
+            discharged_patients = loc_q.filter_by(is_active=False).count()
+            patient_ids = [p.id for p in loc_q.all()]
+            active_follow_ups = FollowUp.query.filter(
+                FollowUp.patient_id.in_(patient_ids),
+                FollowUp.is_completed == False
+            ).count()
+        else:
+            total_patients = 0
+            discharged_patients = 0
+            active_follow_ups = 0
+        total_users = User.query.count()
     else:
         # Doctor/Nurse sees only their patients
         total_patients = current_user.patients.count()
@@ -104,33 +120,30 @@ def patient_dashboard():
         flash('No patient profile is linked to your account. Please link a patient record from your profile.', 'error')
         return redirect(url_for('auth.profile'))
 
-    upcoming_appointments = patient.follow_ups.filter(FollowUp.follow_up_date >= datetime.utcnow()).order_by(FollowUp.follow_up_date.asc()).limit(5).all()
-    recent_vitals = VitalSigns.query.join(FollowUp).filter(FollowUp.patient_id == patient.id).order_by(VitalSigns.recorded_date.desc()).limit(3).all()
+    recent_vitals = (VitalSigns.query
+                     .join(FollowUp)
+                     .filter(FollowUp.patient_id == patient.id)
+                     .order_by(VitalSigns.recorded_date.desc())
+                     .limit(3).all())
 
-    health_education = [
-        {
-            'title': 'Post-Cesarean Wound Care Basics',
-            'description': 'Learn how to keep your incision clean, recognize infection signs, and support healthy healing.'
-        },
-        {
-            'title': 'Pain Management After Surgery',
-            'description': 'Guidance on pain medicines, rest, and safe movement after your c-section.'
-        },
-        {
-            'title': 'Nutrition for Recovery',
-            'description': 'Diet tips to support wound healing, energy, and breastfeeding needs.'
-        },
-        {
-            'title': 'When to Contact Your Care Team',
-            'description': 'Red flags and symptoms that need prompt attention from your provider.'
-        }
-    ]
+    alerts = (Alert.query
+              .filter_by(patient_id=patient.id, is_resolved=False)
+              .order_by(Alert.created_at.desc())
+              .limit(10).all())
+
+    recent_assessments = (WoundAssessment.query
+                          .filter_by(patient_id=patient.id)
+                          .order_by(WoundAssessment.assessment_date.desc())
+                          .limit(5).all())
+
+    primary_doctor = User.query.get(patient.primary_doctor_id) if patient.primary_doctor_id else None
 
     return render_template('dashboard/patient_dashboard.html',
-                         patient=patient,
-                         upcoming_appointments=upcoming_appointments,
-                         recent_vitals=recent_vitals,
-                         health_education=health_education_topics)
+                           patient=patient,
+                           recent_vitals=recent_vitals,
+                           alerts=alerts,
+                           recent_assessments=recent_assessments,
+                           primary_doctor=primary_doctor)
 
 @dashboard_bp.route('/health-education')
 @login_required

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Schedule Follow-up - MubyeyiCare{% endblock %}
+{% block title %}Edit Follow-up - MubyeyiCare{% endblock %}
 
 {% block content %}
 <div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-calendar-plus"></i> Schedule Follow-up</h2>
-    <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back to Patient
+    <h2><i class="fas fa-calendar-pen me-2"></i> Edit Follow-up</h2>
+    <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
     </a>
 </div>
 
@@ -18,7 +18,7 @@
                 <small class="text-white-50 ms-2">— {{ patient.mrn }}</small>
             </div>
             <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('follow_ups.create_follow_up', patient_id=patient.id) }}">
+                <form method="POST" action="{{ url_for('follow_ups.edit_follow_up', follow_up_id=follow_up.id) }}">
 
                     <p class="section-title">Schedule Details</p>
                     <div class="row">
@@ -26,14 +26,16 @@
                             <label for="follow_up_date" class="form-label">Follow-up Date <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-calendar"></i></span>
-                                <input type="date" class="form-control" id="follow_up_date" name="follow_up_date" required>
+                                <input type="date" class="form-control" id="follow_up_date" name="follow_up_date"
+                                       value="{{ follow_up.follow_up_date.strftime('%Y-%m-%d') }}" required>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="follow_up_time" class="form-label">Time <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-clock"></i></span>
-                                <input type="time" class="form-control" id="follow_up_time" name="follow_up_time" value="09:00" required>
+                                <input type="time" class="form-control" id="follow_up_time" name="follow_up_time"
+                                       value="{{ follow_up.follow_up_date.strftime('%H:%M') }}" required>
                             </div>
                         </div>
                     </div>
@@ -46,9 +48,11 @@
                                 <select class="form-select" id="follow_up_type" name="follow_up_type"
                                         style="border-left:none;" required>
                                     <option value="">— Select Type —</option>
-                                    <option value="In-person">In-person</option>
-                                    <option value="Telemedicine">Telemedicine</option>
-                                    <option value="Phone">Phone</option>
+                                    {% for opt in ['In-person', 'Telemedicine', 'Phone'] %}
+                                    <option value="{{ opt }}" {{ 'selected' if follow_up.follow_up_type == opt }}>
+                                        {{ opt }}
+                                    </option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -57,6 +61,7 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-location-dot"></i></span>
                                 <input type="text" class="form-control" id="visit_location" name="visit_location"
+                                       value="{{ follow_up.visit_location or '' }}"
                                        placeholder="e.g., OPD, Home, Clinic">
                             </div>
                         </div>
@@ -65,15 +70,16 @@
                     <div class="mb-4">
                         <label for="notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="4"
-                                  placeholder="Additional notes for this follow-up…"></textarea>
+                                  placeholder="Additional notes for this follow-up…">{{ follow_up.notes or '' }}</textarea>
                     </div>
 
                     <hr class="my-3">
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary px-4">
-                            <i class="fas fa-calendar-check me-1"></i> Schedule
+                            <i class="fas fa-save me-1"></i> Save Changes
                         </button>
-                        <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=follow_up.id) }}"
+                           class="btn btn-outline-secondary">
                             <i class="fas fa-times me-1"></i> Cancel
                         </a>
                     </div>

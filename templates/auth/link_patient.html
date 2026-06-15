@@ -1,35 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}Link Patient Record - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}Link Patient Record - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-link"></i> Link Patient Record</h2>
+    <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Profile
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6" data-aos="fade-up">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-link"></i> Link Patient Record</h4>
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-id-card me-2"></i> Patient Identification
             </div>
-            <div class="card-body">
-                <p class="mb-4">Enter your patient MRN, email, or phone to link this account to an existing patient profile.</p>
+            <div class="card-body p-4">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-circle-info me-2"></i>
+                    Enter at least one of the following fields to link your account to an existing patient profile.
+                </div>
+
                 <form method="POST" action="{{ url_for('auth.link_patient') }}">
                     <div class="mb-3">
-                        <label for="mrn" class="form-label">MRN</label>
-                        <input type="text" class="form-control" id="mrn" name="mrn" placeholder="Medical Record Number">
+                        <label for="mrn" class="form-label">Medical Record Number (MRN)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                            <input type="text" class="form-control" id="mrn" name="mrn"
+                                   placeholder="e.g. MRN-001234">
+                        </div>
                     </div>
+
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" placeholder="Patient email address">
+                        <label for="email" class="form-label">Patient Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   placeholder="Patient email address">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Phone</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="Patient phone number">
+
+                    <div class="mb-4">
+                        <label for="phone" class="form-label">Patient Phone</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                   placeholder="Patient phone number">
+                        </div>
                     </div>
+
+                    <hr class="my-3">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Link Patient Record
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-link me-1"></i> Link Record
                         </button>
-                        <a href="{{ url_for('auth.profile') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
+                        <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
                         </a>
                     </div>
                 </form>

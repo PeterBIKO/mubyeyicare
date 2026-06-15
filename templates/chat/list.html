@@ -1,50 +1,53 @@
 {% extends "base.html" %}
 
-{% block title %}Chat - MubyeYiCare{% endblock %}
+{% block title %}Chat - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Patient Chat</h5>
-                <span class="text-white-50">Select a patient to start chatting</span>
-            </div>
-            <div class="card-body">
-                {% if patients %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Patient</th>
-                                <th>MRN</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for patient in patients %}
-                            <tr>
-                                <td>{{ patient.get_full_name() }}</td>
-                                <td>{{ patient.mrn }}</td>
-                                <td>{{ patient.phone }}</td>
-                                <td>{{ patient.email or 'N/A' }}</td>
-                                <td>
-                                    <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-comments"></i> Chat
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted">No patients available for chat.</p>
-                {% endif %}
-            </div>
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-comments"></i> Patient Chat</h2>
+</div>
+
+<div class="card" data-aos="fade-up">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-list me-2"></i> Select a Patient to Chat
+    </div>
+    <div class="card-body p-0">
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>MRN</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td class="fw-medium">{{ patient.get_full_name() }}</td>
+                        <td><code>{{ patient.mrn }}</code></td>
+                        <td class="text-muted small">{{ patient.phone }}</td>
+                        <td class="text-muted small">{{ patient.email or '—' }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}"
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-comments me-1"></i> Chat
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-comments-slash fa-2x d-block mb-2 opacity-30"></i>
+            No patients available for chat.
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

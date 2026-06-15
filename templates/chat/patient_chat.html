@@ -1,166 +1,262 @@
 {% extends "base.html" %}
 
-{% block title %}Chat with {{ selected_provider.get_full_name() if selected_provider else patient.get_full_name() }} - MubyeYiCare{% endblock %}
+{% block title %}Chat - MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-box {
+        height: 55vh;
+        overflow-y: auto;
+        padding: 1rem 1.25rem;
+        background: #f7fafc;
+        border-radius: 0;
+    }
+    .msg-bubble {
+        max-width: 78%;
+        padding: .65rem 1rem;
+        border-radius: 16px;
+        font-size: .9rem;
+        line-height: 1.45;
+    }
+    .msg-bubble.sent {
+        background: linear-gradient(135deg, #1e3a5f, #2c5282);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+    .msg-bubble.received {
+        background: #fff;
+        color: #2d3748;
+        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .msg-meta { font-size: .72rem; opacity: .7; margin-top: .3rem; }
+    .chat-input { border-top: 1px solid #e2e8f0; padding: 1rem 1.25rem; background: #fff; }
+    .chat-input textarea { resize: none; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">Chat with {{ selected_provider.get_full_name() if selected_provider else patient.get_full_name() }}</h5>
-                    {% if selected_provider %}
-                    <small class="text-white-50">Provider role: {{ selected_provider.role.value.capitalize() }}</small>
-                    {% else %}
-                    <small class="text-white-50">MRN: {{ patient.mrn }}</small>
-                    {% endif %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-comments me-2"></i>
+        Chat with {{ selected_provider.get_full_name() if selected_provider else patient.get_full_name() }}
+    </h2>
+    <a href="{% if current_user.role.value in ['patient', 'mother'] %}{{ url_for('dashboard.index') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}"
+       class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row g-3">
+    <!-- Chat panel -->
+    <div class="col-lg-8">
+        <div class="card p-0 overflow-hidden">
+            <!-- Chat header -->
+            <div class="card-header bg-primary text-white d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
+                     style="width:40px;height:40px;flex-shrink:0;">
+                    <i class="fas fa-user text-primary"></i>
                 </div>
-                <a href="{% if current_user.role.value in ['patient', 'mother'] %}{{ url_for('chat.patient_self_chat') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}" class="btn btn-light btn-sm">
-                    <i class="fas fa-arrow-left"></i> Back to chat list
-                </a>
+                <div>
+                    <div class="fw-semibold">
+                        {{ selected_provider.get_full_name() if selected_provider else patient.get_full_name() }}
+                    </div>
+                    <small class="text-white-50">
+                        {% if selected_provider %}
+                            {{ selected_provider.role.value.capitalize() }}
+                        {% else %}
+                            MRN: {{ patient.mrn }}
+                        {% endif %}
+                    </small>
+                </div>
             </div>
-            <div class="card-body chat-box" style="max-height: 60vh; overflow-y: auto;">
+
+            <!-- Messages -->
+            <div class="chat-box" id="chatBox">
                 {% if messages %}
                     {% for message in messages %}
-                    <div class="mb-3 d-flex {{ 'justify-content-end' if message.sender_id == current_user.id else 'justify-content-start' }}" data-message-id="{{ message.id }}">
-                        <div class="p-3 rounded {{ 'bg-primary text-white' if message.sender_id == current_user.id else 'bg-light text-dark' }}" style="max-width: 80%;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small>
-                                    <strong>{% if message.sender_id == current_user.id %}You{% else %}{{ message.sender.get_full_name() if message.sender else message.sender_role.capitalize() }}{% endif %}</strong>
-                                    <span class="text-muted">({{ message.sender_role.capitalize() }})</span>
-                                </small>
-                                <small class="text-muted">{{ message.created_at.strftime('%b %d, %Y %H:%M') }}</small>
+                    <div class="mb-3 d-flex {{ 'justify-content-end' if message.sender_id == current_user.id else 'justify-content-start' }}"
+                         data-message-id="{{ message.id }}">
+                        <div>
+                            <div class="msg-bubble {{ 'sent' if message.sender_id == current_user.id else 'received' }}">
+                                {% if message.content %}<p class="mb-0">{{ message.content }}</p>{% endif %}
+                                {% if message.attachment_url %}
+                                    {% if message.attachment_type and message.attachment_type.startswith('image') %}
+                                        <img src="{{ message.attachment_url }}" class="img-fluid rounded mt-1" style="max-width:260px;" alt="image">
+                                    {% elif message.attachment_type and message.attachment_type.startswith('video') %}
+                                        <video controls class="img-fluid rounded mt-1" style="max-width:260px;">
+                                            <source src="{{ message.attachment_url }}" type="{{ message.attachment_type }}">
+                                        </video>
+                                    {% else %}
+                                        <a href="{{ message.attachment_url }}" target="_blank"
+                                           class="{{ 'text-white' if message.sender_id == current_user.id else 'text-primary' }}">
+                                            <i class="fas fa-paperclip me-1"></i>{{ message.attachment_filename or 'Download' }}
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
                             </div>
-                            {% if message.content %}
-                            <p class="mb-2">{{ message.content }}</p>
-                            {% endif %}
-                            {% if message.attachment_url %}
-                                {% if message.attachment_type and message.attachment_type.startswith('image') %}
-                                    <img src="{{ message.attachment_url }}" class="img-fluid rounded" style="max-width: 100%;" alt="Uploaded image">
-                                {% elif message.attachment_type and message.attachment_type.startswith('video') %}
-                                    <video controls class="img-fluid rounded" style="max-width: 100%;">
-                                        <source src="{{ message.attachment_url }}" type="{{ message.attachment_type }}">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                {% else %}
-                                    <a href="{{ message.attachment_url }}" target="_blank" class="text-white">Download attachment</a>
-                                {% endif %}
-                                {% if message.attachment_filename %}
-                                <div class="small mt-1 text-muted">{{ message.attachment_filename }}</div>
-                                {% endif %}
-                            {% endif %}
+                            <div class="msg-meta {{ 'text-end' if message.sender_id == current_user.id else '' }}">
+                                {% if message.sender_id == current_user.id %}You{% else %}{{ message.sender.get_full_name() if message.sender else message.sender_role.capitalize() }}{% endif %}
+                                &middot; {{ message.created_at.strftime('%b %d %H:%M') }}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
                 {% else %}
-                <p class="text-muted">No chat history yet. Send the first message to start a conversation.</p>
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-comments fa-2x d-block mb-2 opacity-30"></i>
+                    No messages yet. Start the conversation!
+                </div>
                 {% endif %}
             </div>
-            <div class="card-footer">
-                <form method="POST" action="{{ url_for('chat.patient_chat', patient_id=patient.id, provider_id=selected_provider.id if selected_provider else None) }}" enctype="multipart/form-data">
+
+            <!-- Input -->
+            <div class="chat-input">
+                <form id="chatForm" method="POST"
+                      action="{{ url_for('chat.patient_chat', patient_id=patient.id, provider_id=selected_provider.id if selected_provider else None) }}"
+                      enctype="multipart/form-data">
                     {% if selected_provider %}
                     <input type="hidden" name="provider_id" value="{{ selected_provider.id }}">
                     {% endif %}
-                    <div class="mb-3">
-                        <label for="message" class="form-label">New message</label>
-                        <textarea id="message" name="message" class="form-control" rows="4" placeholder="Type your message here..."></textarea>
+                    <div class="mb-2">
+                        <textarea id="message" name="message" class="form-control" rows="3"
+                                  placeholder="Type your message…"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="attachment" class="form-label">Attach image or video</label>
-                        <input type="file" class="form-control" id="attachment" name="attachment" accept="image/*,video/*">
+                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                        <label class="input-group w-auto" style="max-width:260px;">
+                            <span class="input-group-text"><i class="fas fa-paperclip"></i></span>
+                            <input type="file" class="form-control form-control-sm" id="attachment" name="attachment"
+                                   accept="image/*,video/*">
+                        </label>
+                        <button type="submit" class="btn btn-primary no-spinner" id="sendBtn">
+                            <i class="fas fa-paper-plane me-1"></i> Send
+                        </button>
                     </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Send
-                    </button>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Patient Info</h5>
+
+    <!-- Info sidebar -->
+    <div class="col-lg-4">
+        <!-- Provider card (patients only) -->
+        {% if current_user.role.value in ['patient', 'mother'] %}
+        <div class="card mb-3" data-aos="fade-up">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-user-doctor me-2"></i> Chatting with
             </div>
-            <div class="card-body">
-                <p><strong>Name:</strong> {{ patient.get_full_name() }}</p>
-                <p><strong>MRN:</strong> {{ patient.mrn }}</p>
-                <p><strong>Phone:</strong> {{ patient.phone }}</p>
-                <p><strong>Email:</strong> {{ patient.email or 'N/A' }}</p>
-                <p><strong>Primary Doctor:</strong> {{ patient.primary_doctor.get_full_name() }}</p>
-                <p><strong>Status:</strong> {{ 'Active' if patient.is_active else 'Discharged' }}</p>
+            <div class="card-body small">
                 {% if selected_provider %}
-                <hr>
-                <p><strong>Selected Provider:</strong> {{ selected_provider.get_full_name() }}</p>
-                <p><strong>Role:</strong> {{ selected_provider.role.value.capitalize() }}</p>
-                <p><strong>Contact:</strong> {{ selected_provider.email or 'N/A' }}</p>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
+                         style="width:44px;height:44px;font-size:1rem;">
+                        {{ selected_provider.first_name[0] | upper }}{{ selected_provider.last_name[0] | upper }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ selected_provider.get_full_name() }}</div>
+                        <div class="text-muted">{{ selected_provider.role.value.capitalize() }}</div>
+                        {% if selected_provider.email %}
+                        <div class="text-muted">{{ selected_provider.email }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted mb-2">No provider selected.</p>
                 {% endif %}
+                <a href="{{ url_for('chat.patient_choose_provider') }}"
+                   class="btn btn-outline-secondary btn-sm w-100">
+                    <i class="fas fa-users me-1"></i> Chat with a different provider
+                </a>
             </div>
         </div>
+        {% endif %}
+
+        <!-- Patient info (providers see this) -->
+        {% if current_user.role.value not in ['patient', 'mother'] %}
+        <div class="card" data-aos="fade-up">
+            <div class="card-header bg-secondary text-white">
+                <i class="fas fa-id-card me-2"></i> Patient Info
+            </div>
+            <div class="card-body small">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-1 border-bottom"><span class="text-muted">Name</span><br><strong>{{ patient.get_full_name() }}</strong></li>
+                    <li class="py-1 border-bottom"><span class="text-muted">MRN</span><br><code>{{ patient.mrn }}</code></li>
+                    <li class="py-1 border-bottom"><span class="text-muted">Phone</span><br>{{ patient.phone }}</li>
+                    <li class="py-1 border-bottom"><span class="text-muted">Email</span><br>{{ patient.email or '—' }}</li>
+                    <li class="py-1 border-bottom"><span class="text-muted">Primary Doctor</span><br>{{ patient.primary_doctor.get_full_name() }}</li>
+                    <li class="py-1">
+                        <span class="text-muted">Status</span><br>
+                        {% if patient.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Discharged</span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <script>
-(function(){
-    const patientId = {{ patient.id }};
-    const currentUserId = {{ current_user.id }};
-    const chatBox = document.querySelector('.chat-box');
-    const messageForm = document.querySelector('form');
-    const textarea = document.querySelector('#message');
-    const attachmentInput = document.querySelector('#attachment');
-    let lastId = 0;
+(function () {
+    var patientId     = {{ patient.id }};
+    var currentUserId = {{ current_user.id }};
+    var chatBox       = document.getElementById('chatBox');
+    var chatForm      = document.getElementById('chatForm');
+    var textarea      = document.getElementById('message');
+    var attachInput   = document.getElementById('attachment');
+    var sendBtn       = document.getElementById('sendBtn');
+    var lastId        = 0;
 
-    function scrollToBottom(){
-        chatBox.scrollTop = chatBox.scrollHeight;
+    function scrollBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
+
+    function getLastId() {
+        var ids = Array.from(chatBox.querySelectorAll('[data-message-id]'))
+                       .map(function (el) { return parseInt(el.dataset.messageId, 10); })
+                       .filter(Boolean);
+        return ids.length ? Math.max.apply(null, ids) : 0;
     }
 
-    function getLastRenderedMessageId(){
-        const ids = Array.from(chatBox.querySelectorAll('[data-message-id]')).map(el => parseInt(el.dataset.messageId, 10)).filter(Boolean);
-        return ids.length ? Math.max(...ids) : 0;
-    }
-
-    function renderMessage(m){
+    function renderMessage(m) {
         if (m.id && chatBox.querySelector('[data-message-id="' + m.id + '"]')) return;
-        const isCurrentUser = m.sender_id === currentUserId;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'mb-3 d-flex ' + (isCurrentUser ? 'justify-content-end' : 'justify-content-start');
+        var isMe = m.sender_id === currentUserId;
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'mb-3 d-flex ' + (isMe ? 'justify-content-end' : 'justify-content-start');
         if (m.id) wrapper.dataset.messageId = m.id;
 
-        const bubble = document.createElement('div');
-        bubble.className = 'p-3 rounded ' + (isCurrentUser ? 'bg-primary text-white' : 'bg-light text-dark');
-        bubble.style.maxWidth = '80%';
+        var inner = document.createElement('div');
 
-        const header = document.createElement('div');
-        header.className = 'd-flex justify-content-between align-items-center mb-2';
-        const senderName = isCurrentUser ? 'You' : (m.sender_name || m.sender_role || 'Unknown');
-        header.innerHTML = `<small><strong>${senderName}</strong> <span class="text-muted">(${m.sender_role})</span></small><small class="text-muted">${new Date(m.created_at).toLocaleString()}</small>`;
-        bubble.appendChild(header);
+        var bubble = document.createElement('div');
+        bubble.className = 'msg-bubble ' + (isMe ? 'sent' : 'received');
 
-        if(m.content){
-            const p = document.createElement('p');
-            p.className = 'mb-2';
+        if (m.content) {
+            var p = document.createElement('p');
+            p.className = 'mb-0';
             p.textContent = m.content;
             bubble.appendChild(p);
         }
-
-        if(m.attachment_url){
-            if(m.attachment_type && m.attachment_type.startsWith('image')){
-                const img = document.createElement('img');
+        if (m.attachment_url) {
+            if (m.attachment_type && m.attachment_type.startsWith('image')) {
+                var img = document.createElement('img');
                 img.src = m.attachment_url;
-                img.className = 'img-fluid rounded';
-                img.style.maxWidth = '100%';
+                img.className = 'img-fluid rounded mt-1';
+                img.style.maxWidth = '260px';
                 bubble.appendChild(img);
-            } else if(m.attachment_type && m.attachment_type.startsWith('video')){
-                const video = document.createElement('video');
-                video.controls = true;
-                video.className = 'img-fluid rounded';
-                video.style.maxWidth = '100%';
-                const source = document.createElement('source');
-                source.src = m.attachment_url;
-                source.type = m.attachment_type;
-                video.appendChild(source);
-                bubble.appendChild(video);
+            } else if (m.attachment_type && m.attachment_type.startsWith('video')) {
+                var vid = document.createElement('video');
+                vid.controls = true;
+                vid.className = 'img-fluid rounded mt-1';
+                vid.style.maxWidth = '260px';
+                var src = document.createElement('source');
+                src.src = m.attachment_url;
+                src.type = m.attachment_type;
+                vid.appendChild(src);
+                bubble.appendChild(vid);
             } else {
-                const a = document.createElement('a');
+                var a = document.createElement('a');
                 a.href = m.attachment_url;
                 a.target = '_blank';
                 a.textContent = m.attachment_filename || 'Download';
@@ -168,64 +264,67 @@
             }
         }
 
-        wrapper.appendChild(bubble);
+        var meta = document.createElement('div');
+        meta.className = 'msg-meta' + (isMe ? ' text-end' : '');
+        var senderName = isMe ? 'You' : (m.sender_name || m.sender_role || 'Unknown');
+        var ts = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+        meta.textContent = senderName + ' · ' + ts;
+
+        inner.appendChild(bubble);
+        inner.appendChild(meta);
+        wrapper.appendChild(inner);
         chatBox.appendChild(wrapper);
     }
 
-    async function fetchMessages(){
-        try{
-            const res = await fetch(`${location.origin}/chat/patient/${patientId}/messages?since_id=${lastId}`);
-            if(!res.ok) return;
-            const data = await res.json();
-            if(Array.isArray(data) && data.length){
-                data.forEach(m => {
+    async function fetchMessages() {
+        try {
+            var res = await fetch(location.origin + '/chat/patient/' + patientId + '/messages?since_id=' + lastId);
+            if (!res.ok) return;
+            var data = await res.json();
+            if (Array.isArray(data) && data.length) {
+                data.forEach(function (m) {
                     renderMessage(m);
                     lastId = Math.max(lastId, m.id || lastId);
                 });
-                scrollToBottom();
+                scrollBottom();
             }
-        }catch(e){
-            console.error('Failed to fetch messages', e);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    messageForm.addEventListener('submit', async function(e){
+    chatForm.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('message', textarea.value || '');
-        if(attachmentInput.files.length){
-            formData.append('attachment', attachmentInput.files[0]);
-        }
-        try{
-            const res = await fetch(`${location.origin}/chat/patient/${patientId}/send`, {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin'
+        var formData = new FormData();
+        formData.append('message', (textarea.value || '').trim());
+        if (attachInput.files.length) formData.append('attachment', attachInput.files[0]);
+        sendBtn.disabled = true;
+        try {
+            var res = await fetch(location.origin + '/chat/patient/' + patientId + '/send', {
+                method: 'POST', body: formData, credentials: 'same-origin'
             });
-            if(res.ok){
-                const m = await res.json();
+            if (res.ok) {
+                var m = await res.json();
                 renderMessage(m);
                 lastId = Math.max(lastId, m.id || lastId);
                 textarea.value = '';
-                attachmentInput.value = '';
-                scrollToBottom();
+                attachInput.value = '';
+                scrollBottom();
             } else {
-                const err = await res.json();
+                var err = await res.json();
                 alert(err.error || 'Failed to send message');
             }
-        }catch(err){
-            console.error(err);
-            alert('Failed to send message');
-        }
+        } catch (err) { console.error(err); alert('Failed to send message'); }
+        finally { sendBtn.disabled = false; }
     });
 
-    (function initLast(){
-        lastId = getLastRenderedMessageId();
-        fetchMessages();
-        setInterval(fetchMessages, 3000);
-        scrollToBottom();
-    })();
+    /* Ctrl+Enter to send */
+    textarea.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.ctrlKey) { chatForm.dispatchEvent(new Event('submit')); }
+    });
+
+    lastId = getLastId();
+    scrollBottom();
+    fetchMessages();
+    setInterval(fetchMessages, 3000);
 })();
 </script>
-
 {% endblock %}

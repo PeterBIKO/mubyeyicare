@@ -1,63 +1,117 @@
 {% extends "base.html" %}
 
-{% block title %}Wound Assessments - {{ patient.get_full_name() }}{% endblock %}
+{% block title %}Assessments - {{ patient.get_full_name() }} - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">Wound Assessments for {{ patient.get_full_name() }}</h5>
-                    <small class="text-white-50">Review patient wound assessment history and create new assessments.</small>
-                </div>
-                <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-light btn-sm">
-                    <i class="fas fa-plus-circle"></i> New Assessment
-                </a>
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h2><i class="fas fa-clipboard-list"></i> Wound Assessments</h2>
+        <p class="text-muted small mb-0">{{ patient.get_full_name() }} &mdash; <code>{{ patient.mrn }}</code></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i> New Assessment
+        </a>
+        <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Patient
+        </a>
+    </div>
+</div>
+
+<!-- Patient summary row -->
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="0">
+        <div class="stat-card stat-info">
+            <div class="stat-icon" style="background:rgba(52,152,219,.12);color:#3498db;">
+                <i class="fas fa-phone"></i>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-3"><strong>MRN:</strong> {{ patient.mrn }}</div>
-                    <div class="col-md-3"><strong>Phone:</strong> {{ patient.phone }}</div>
-                    <div class="col-md-3"><strong>Email:</strong> {{ patient.email or 'N/A' }}</div>
-                    <div class="col-md-3"><strong>Status:</strong> {{ 'Active' if patient.is_active else 'Discharged' }}</div>
-                </div>
-                {% if assessments %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Infection</th>
-                                <th>Discharge</th>
-                                <th>Pain</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for assessment in assessments %}
-                            <tr>
-                                <td>{{ assessment.assessment_date.strftime('%b %d, %Y %H:%M') }}</td>
-                                <td>{{ assessment.status.value.capitalize() }}</td>
-                                <td>{{ 'Yes' if assessment.infection_signs else 'No' }}</td>
-                                <td>{{ assessment.discharge_type or ('Yes' if assessment.discharge_present else 'No') }}</td>
-                                <td>{{ assessment.pain_level or 'N/A' }}</td>
-                                <td>
-                                    <a href="{{ url_for('assessments.view_assessment', assessment_id=assessment.id) }}" class="btn btn-sm btn-secondary">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted">No wound assessments have been recorded for this patient yet.</p>
-                {% endif %}
-            </div>
+            <div class="stat-number" style="font-size:1.1rem;color:#3498db;">{{ patient.phone }}</div>
+            <div class="stat-label">Phone</div>
         </div>
+    </div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="60">
+        <div class="stat-card {{ 'stat-success' if patient.is_active else '' }}">
+            <div class="stat-icon" style="background:rgba(39,174,96,.12);color:#27ae60;">
+                <i class="fas fa-circle-dot"></i>
+            </div>
+            <div class="stat-number" style="font-size:1.1rem;color:#27ae60;">{{ 'Active' if patient.is_active else 'Discharged' }}</div>
+            <div class="stat-label">Status</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="120">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+            <div class="stat-number">{{ assessments | length }}</div>
+            <div class="stat-label">Total Assessments</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="180">
+        <div class="stat-card stat-warning">
+            <div class="stat-icon" style="background:rgba(243,156,18,.12);color:#f39c12;">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-number" style="font-size:1rem;color:#f39c12;">{{ patient.email or '—' }}</div>
+            <div class="stat-label">Email</div>
+        </div>
+    </div>
+</div>
+
+<div class="card" data-aos="fade-up">
+    <div class="card-body p-0">
+        {% if assessments %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Infection</th>
+                        <th class="text-center">Discharge</th>
+                        <th class="text-center">Pain</th>
+                        <th class="text-center">View</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assessments %}
+                    <tr>
+                        <td class="small">{{ a.assessment_date.strftime('%b %d, %Y %H:%M') }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-{{ 'success' if a.status.value == 'excellent' else 'info' if a.status.value == 'good' else 'warning text-dark' if a.status.value == 'fair' else 'danger' }}">
+                                {{ a.status.value.capitalize() }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if a.infection_signs %}
+                            <span class="badge bg-danger">Yes</span>
+                            {% else %}
+                            <span class="badge bg-success">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center small">
+                            {{ a.discharge_type or ('Yes' if a.discharge_present else 'No') }}
+                        </td>
+                        <td class="text-center small">{{ a.pain_level or '—' }}/10</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('assessments.view_assessment', assessment_id=a.id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-clipboard fa-2x d-block mb-2 opacity-30"></i>
+            No wound assessments recorded yet.
+            <br>
+            <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-1"></i> Create First Assessment
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

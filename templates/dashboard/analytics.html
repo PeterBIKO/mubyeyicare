@@ -1,117 +1,153 @@
 {% extends "base.html" %}
 
-{% block title %}Analytics - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}Analytics - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2 class="mb-4"><i class="fas fa-chart-bar"></i> Wound Healing Analytics</h2>
-    </div>
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-chart-bar"></i> Wound Healing Analytics</h2>
 </div>
 
-<div class="row">
-    <div class="col-md-2">
+<!-- Stats row: 3 per row on xs, 6 per row on md+ -->
+<div class="row g-2 g-md-3 mb-4">
+    <div class="col-4 col-md-2" data-aos="fade-up" data-aos-delay="0">
         <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
             <div class="stat-number">{{ stats.total_assessments }}</div>
-            <div class="stat-label">Total Assessments</div>
+            <div class="stat-label">Total</div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="stat-card">
-            <div class="stat-number" style="color: #27ae60;">{{ stats.excellent }}</div>
+    <div class="col-4 col-md-2" data-aos="fade-up" data-aos-delay="40">
+        <div class="stat-card stat-success">
+            <div class="stat-icon" style="background:rgba(39,174,96,.12);color:#27ae60;"><i class="fas fa-star"></i></div>
+            <div class="stat-number" style="color:#27ae60;">{{ stats.excellent }}</div>
             <div class="stat-label">Excellent</div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="stat-card">
-            <div class="stat-number" style="color: #3498db;">{{ stats.good }}</div>
+    <div class="col-4 col-md-2" data-aos="fade-up" data-aos-delay="80">
+        <div class="stat-card stat-info">
+            <div class="stat-icon" style="background:rgba(52,152,219,.12);color:#3498db;"><i class="fas fa-thumbs-up"></i></div>
+            <div class="stat-number" style="color:#3498db;">{{ stats.good }}</div>
             <div class="stat-label">Good</div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="stat-card">
-            <div class="stat-number" style="color: #f39c12;">{{ stats.fair }}</div>
+    <div class="col-4 col-md-2" data-aos="fade-up" data-aos-delay="120">
+        <div class="stat-card stat-warning">
+            <div class="stat-icon" style="background:rgba(243,156,18,.12);color:#f39c12;"><i class="fas fa-minus-circle"></i></div>
+            <div class="stat-number" style="color:#f39c12;">{{ stats.fair }}</div>
             <div class="stat-label">Fair</div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="stat-card">
-            <div class="stat-number" style="color: #e67e22;">{{ stats.poor }}</div>
+    <div class="col-4 col-md-2" data-aos="fade-up" data-aos-delay="160">
+        <div class="stat-card" style="border-top-color:#e67e22;">
+            <div class="stat-icon" style="background:rgba(230,126,34,.12);color:#e67e22;"><i class="fas fa-triangle-exclamation"></i></div>
+            <div class="stat-number" style="color:#e67e22;">{{ stats.poor }}</div>
             <div class="stat-label">Poor</div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="stat-card">
-            <div class="stat-number" style="color: #e74c3c;">{{ stats.infected }}</div>
+    <div class="col-4 col-md-2" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-card stat-danger">
+            <div class="stat-icon" style="background:rgba(231,76,60,.12);color:#e74c3c;"><i class="fas fa-biohazard"></i></div>
+            <div class="stat-number" style="color:#e74c3c;">{{ stats.infected }}</div>
             <div class="stat-label">Infected</div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-8">
+<!-- Charts -->
+<div class="row g-3">
+    <div class="col-lg-8" data-aos="fade-up">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Wound Status Distribution</h5>
+                <i class="fas fa-chart-pie me-2"></i> Wound Status Distribution
             </div>
             <div class="card-body">
-                <canvas id="statusChart"></canvas>
+                <canvas id="statusChart" height="90"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="60">
+        <div class="card h-100">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Status Summary</h5>
+                <i class="fas fa-list-ol me-2"></i> Status Summary
             </div>
-            <div class="card-body">
-                <table class="table table-sm">
-                    <tr>
-                        <td><strong>Excellent:</strong></td>
-                        <td class="text-end">{{ stats.excellent }} ({{ ((stats.excellent / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Good:</strong></td>
-                        <td class="text-end">{{ stats.good }} ({{ ((stats.good / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Fair:</strong></td>
-                        <td class="text-end">{{ stats.fair }} ({{ ((stats.fair / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Poor:</strong></td>
-                        <td class="text-end">{{ stats.poor }} ({{ ((stats.poor / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Infected:</strong></td>
-                        <td class="text-end">{{ stats.infected }} ({{ ((stats.infected / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%)</td>
-                    </tr>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th class="text-end">Count</th>
+                            <th class="text-end">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set statuses = [
+                            ('Excellent', stats.excellent, 'success'),
+                            ('Good',      stats.good,      'info'),
+                            ('Fair',      stats.fair,      'warning'),
+                            ('Poor',      stats.poor,      'secondary'),
+                            ('Infected',  stats.infected,  'danger')
+                        ] %}
+                        {% for name, count, color in statuses %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-{{ color }}">{{ name }}</span>
+                            </td>
+                            <td class="text-end fw-medium">{{ count }}</td>
+                            <td class="text-end text-muted small">
+                                {{ ((count / stats.total_assessments * 100) | round(1)) if stats.total_assessments > 0 else 0 }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="table-light fw-bold">
+                            <td>Total</td>
+                            <td class="text-end">{{ stats.total_assessments }}</td>
+                            <td class="text-end">100%</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-    const ctx = document.getElementById('statusChart').getContext('2d');
+(function () {
+    var ctx = document.getElementById('statusChart').getContext('2d');
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Excellent', 'Good', 'Fair', 'Poor', 'Infected'],
             datasets: [{
                 data: [{{ stats.excellent }}, {{ stats.good }}, {{ stats.fair }}, {{ stats.poor }}, {{ stats.infected }}],
-                backgroundColor: ['#27ae60', '#3498db', '#f39c12', '#e67e22', '#e74c3c']
+                backgroundColor: ['#27ae60', '#3498db', '#f39c12', '#e67e22', '#e74c3c'],
+                borderWidth: 3,
+                borderColor: '#fff',
+                hoverOffset: 8
             }]
         },
         options: {
             responsive: true,
+            cutout: '62%',
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: { padding: 16, font: { size: 13 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                            var pct = total ? Math.round(ctx.parsed / total * 100) : 0;
+                            return ' ' + ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                        }
+                    }
                 }
             }
         }
     });
+})();
 </script>
 {% endblock %}

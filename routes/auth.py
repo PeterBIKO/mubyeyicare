@@ -63,6 +63,7 @@ def register():
         confirm_password = request.form.get('confirm_password')
         role = request.form.get('role')
         phone = request.form.get('phone')
+        location = request.form.get('location', '').strip()
         
         # Validation
         if not all([username, email, first_name, last_name, password, role]):
@@ -88,7 +89,8 @@ def register():
             first_name=first_name,
             last_name=last_name,
             role=UserRole(role),
-            phone=phone
+            phone=phone,
+            location=location or None
         )
         user.set_password(password)
         

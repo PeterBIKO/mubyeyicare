@@ -1,67 +1,90 @@
 {% extends "base.html" %}
 
-{% block title %}Patients - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}Patients - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h2><i class="fas fa-users"></i> Patients</h2>
-    </div>
-    <div class="col-md-6 text-end">
-        <a href="{{ url_for('patients.create_patient') }}" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> Add New Patient
-        </a>
-    </div>
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-users"></i> Patients</h2>
+    <a href="{{ url_for('patients.create_patient') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-1"></i> Add New Patient
+    </a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('patients.list_patients') }}" class="d-flex gap-2">
-            <input type="text" class="form-control" name="search" placeholder="Search by name, MRN, or email..." value="{{ search }}">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search"></i> Search
-            </button>
+<!-- Search -->
+<div class="card mb-3" data-aos="fade-up">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ url_for('patients.list_patients') }}" id="searchForm">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" name="search" id="searchInput"
+                       placeholder="Search by name, MRN, or email…" value="{{ search }}" autocomplete="off">
+                <button type="submit" class="btn btn-primary no-spinner">
+                    <i class="fas fa-search me-1"></i> Search
+                </button>
+                {% if search %}
+                <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+            </div>
         </form>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body">
+<!-- Table -->
+<div class="card" data-aos="fade-up" data-aos-delay="60">
+    <div class="card-body p-0">
         {% if patients.items %}
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>MRN</th>
                         <th>Name</th>
                         <th>Phone</th>
+                        <th>Location</th>
                         <th>Surgery Date</th>
-                        <th>Days Post-Op</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th class="text-center">Days Post-Op</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for patient in patients.items %}
                     <tr>
-                        <td><strong>{{ patient.mrn }}</strong></td>
-                        <td>{{ patient.get_full_name() }}</td>
-                        <td>{{ patient.phone }}</td>
-                        <td>{{ patient.surgery_date.strftime('%b %d, %Y') }}</td>
-                        <td>{{ patient.days_post_surgery() }}</td>
                         <td>
+                            <code class="text-primary fw-medium">{{ patient.mrn }}</code>
+                        </td>
+                        <td class="fw-medium">{{ patient.get_full_name() }}</td>
+                        <td class="text-muted small">{{ patient.phone }}</td>
+                        <td class="text-muted small">
+                            {% if patient.location %}
+                            <i class="fas fa-location-dot text-primary me-1"></i>{{ patient.location }}
+                            {% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-muted small">{{ patient.surgery_date.strftime('%b %d, %Y') }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">
+                                {{ patient.days_post_surgery() }}d
+                            </span>
+                        </td>
+                        <td class="text-center">
                             {% if patient.is_active %}
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success"><i class="fas fa-circle me-1" style="font-size:.5rem;"></i>Active</span>
                             {% else %}
                             <span class="badge bg-secondary">Discharged</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-sm btn-info">
-                                <i class="fas fa-eye"></i> View
+                        <td class="text-center">
+                            <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}"
+                               class="btn btn-sm btn-outline-primary me-1"
+                               data-bs-toggle="tooltip" title="View patient">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}" class="btn btn-sm btn-warning">
-                                <i class="fas fa-edit"></i> Edit
+                            <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}"
+                               class="btn btn-sm btn-outline-warning"
+                               data-bs-toggle="tooltip" title="Edit patient">
+                                <i class="fas fa-pen"></i>
                             </a>
                         </td>
                     </tr>
@@ -72,43 +95,67 @@
 
         <!-- Pagination -->
         {% if patients.pages > 1 %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                {% if patients.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('patients.list_patients', page=patients.prev_num, search=search) }}">Previous</a>
-                </li>
-                {% endif %}
-
-                {% for page_num in patients.iter_pages() %}
-                    {% if page_num %}
-                        {% if page_num == patients.page %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('patients.list_patients', page=page_num, search=search) }}">{{ page_num }}</a>
-                        </li>
-                        {% endif %}
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+            <small class="text-muted">
+                Showing {{ patients.items | length }} of {{ patients.total }} patients
+            </small>
+            <nav aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    {% if patients.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('patients.list_patients', page=patients.prev_num, search=search) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
                     </li>
                     {% endif %}
-                {% endfor %}
-
-                {% if patients.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('patients.list_patients', page=patients.next_num, search=search) }}">Next</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
+                    {% for page_num in patients.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == patients.page %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('patients.list_patients', page=page_num, search=search) }}">{{ page_num }}</a>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if patients.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('patients.list_patients', page=patients.next_num, search=search) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
         {% endif %}
+
         {% else %}
-        <p class="text-muted text-center py-4">No patients found</p>
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-users-slash fa-2x d-block mb-2 opacity-30"></i>
+            {% if search %}No patients found for <strong>"{{ search }}"</strong>{% else %}No patients registered yet{% endif %}
+        </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Debounce search */
+var searchInput = document.getElementById('searchInput');
+var searchForm  = document.getElementById('searchForm');
+var debounceTimer;
+if (searchInput) {
+    searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () { searchForm.submit(); }, 500);
+    });
+}
+</script>
 {% endblock %}

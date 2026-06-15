@@ -31,6 +31,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(100), nullable=False)
     role = db.Column(db.Enum(UserRole), default=UserRole.PATIENT, nullable=False)
     phone = db.Column(db.String(20))
+    location = db.Column(db.String(200))   # CHW service area (e.g. "Gasabo/Kinyinya")
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -72,6 +73,9 @@ class Patient(db.Model):
     surgeon_name = db.Column(db.String(100))
     incision_type = db.Column(db.String(50))  # e.g., "Pfannenstiel", "Classical"
     
+    # Location (used for CHW filtering)
+    location = db.Column(db.String(200))   # e.g. "Gasabo/Kinyinya"
+
     # Care details
     primary_doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

@@ -24,7 +24,10 @@ def chat_list():
     if current_user.role == UserRole.ADMIN:
         patients = Patient.query.order_by(Patient.last_name.asc(), Patient.first_name.asc()).all()
     elif current_user.role == UserRole.CHW:
-        patients = Patient.query.order_by(Patient.last_name.asc(), Patient.first_name.asc()).all()
+        if current_user.location:
+            patients = Patient.query.filter_by(location=current_user.location).order_by(Patient.last_name.asc(), Patient.first_name.asc()).all()
+        else:
+            patients = []
     else:
         patients = Patient.query.filter_by(primary_doctor_id=current_user.id).order_by(Patient.last_name.asc(), Patient.first_name.asc()).all()
 
@@ -33,6 +36,7 @@ def chat_list():
 @chat_bp.route('/me')
 @login_required
 def patient_self_chat():
+    """Patient initiates chat — goes straight to their primary doctor."""
     if current_user.role not in [UserRole.PATIENT, UserRole.MOTHER]:
         return redirect(url_for('chat.chat_list'))
 
@@ -46,7 +50,32 @@ def patient_self_chat():
         flash('No patient profile linked to this account.', 'error')
         return redirect(url_for('dashboard.index'))
 
-    providers = User.query.filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW])).order_by(User.role.asc(), User.last_name.asc(), User.first_name.asc()).all()
+    # Default to primary doctor; patient can switch provider inside the chat page
+    provider_id = request.args.get('provider_id', type=int) or patient.primary_doctor_id
+    return redirect(url_for('chat.patient_chat', patient_id=patient.id, provider_id=provider_id))
+
+
+@chat_bp.route('/me/providers')
+@login_required
+def patient_choose_provider():
+    """Let a patient pick a different provider to chat with."""
+    if current_user.role not in [UserRole.PATIENT, UserRole.MOTHER]:
+        return redirect(url_for('chat.chat_list'))
+
+    patient = Patient.query.filter_by(user_id=current_user.id).first()
+    if not patient:
+        patient = Patient.query.filter(
+            or_(Patient.email == current_user.email, Patient.phone == current_user.phone)
+        ).first()
+
+    if not patient:
+        flash('No patient profile linked to this account.', 'error')
+        return redirect(url_for('dashboard.index'))
+
+    providers = (User.query
+                 .filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW]))
+                 .order_by(User.role.asc(), User.last_name.asc(), User.first_name.asc())
+                 .all())
     return render_template('chat/provider_list.html', patient=patient, providers=providers)
 
 

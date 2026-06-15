@@ -14,9 +14,9 @@ def list_patients():
     """List all patients"""
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
-    
+
     query = Patient.query
-    
+
     if search:
         query = query.filter(
             (Patient.first_name.ilike(f'%{search}%')) |
@@ -24,12 +24,21 @@ def list_patients():
             (Patient.mrn.ilike(f'%{search}%')) |
             (Patient.email.ilike(f'%{search}%'))
         )
-    
-    if current_user.role not in [UserRole.ADMIN]:
+
+    if current_user.role == UserRole.ADMIN:
+        pass  # admin sees all
+    elif current_user.role == UserRole.CHW:
+        # CHW sees only patients in their assigned location
+        if current_user.location:
+            query = query.filter(Patient.location == current_user.location)
+        else:
+            # CHW has no location assigned yet — show nothing
+            query = query.filter(Patient.id == -1)
+    else:
+        # Doctor / Nurse: patients they are primary doctor for
         query = query.filter_by(primary_doctor_id=current_user.id)
-    
+
     patients = query.paginate(page=page, per_page=10)
-    
     return render_template('patients/list.html', patients=patients, search=search)
 
 @patients_bp.route('/create', methods=['GET', 'POST'])
@@ -49,7 +58,8 @@ def create_patient():
         surgery_type = request.form.get('surgery_type')
         surgeon_name = request.form.get('surgeon_name')
         incision_type = request.form.get('incision_type')
-        
+        location = request.form.get('location', '').strip() or None
+
         # Validation
         if Patient.query.filter_by(mrn=mrn).first():
             flash('Patient with this MRN already exists.', 'error')
@@ -68,6 +78,7 @@ def create_patient():
             surgery_type=surgery_type,
             surgeon_name=surgeon_name,
             incision_type=incision_type,
+            location=location,
             primary_doctor_id=current_user.id
         )
         existing_user = User.query.filter(
@@ -90,9 +101,15 @@ def create_patient():
 def view_patient(patient_id):
     """View patient details"""
     patient = Patient.query.get_or_404(patient_id)
-    
+
     # Check authorization
-    if current_user.role not in [UserRole.ADMIN] and patient.primary_doctor_id != current_user.id:
+    if current_user.role == UserRole.ADMIN:
+        pass
+    elif current_user.role == UserRole.CHW:
+        if not current_user.location or patient.location != current_user.location:
+            flash('You do not have permission to view this patient.', 'error')
+            return redirect(url_for('dashboard.index'))
+    elif patient.primary_doctor_id != current_user.id:
         flash('You do not have permission to view this patient.', 'error')
         return redirect(url_for('dashboard.index'))
     
@@ -112,9 +129,15 @@ def view_patient(patient_id):
 def edit_patient(patient_id):
     """Edit patient record"""
     patient = Patient.query.get_or_404(patient_id)
-    
+
     # Check authorization
-    if current_user.role not in [UserRole.ADMIN] and patient.primary_doctor_id != current_user.id:
+    if current_user.role == UserRole.ADMIN:
+        pass
+    elif current_user.role == UserRole.CHW:
+        if not current_user.location or patient.location != current_user.location:
+            flash('You do not have permission to edit this patient.', 'error')
+            return redirect(url_for('dashboard.index'))
+    elif patient.primary_doctor_id != current_user.id:
         flash('You do not have permission to edit this patient.', 'error')
         return redirect(url_for('dashboard.index'))
     
@@ -126,6 +149,8 @@ def edit_patient(patient_id):
         patient.surgery_type = request.form.get('surgery_type', patient.surgery_type)
         patient.surgeon_name = request.form.get('surgeon_name', patient.surgeon_name)
         patient.incision_type = request.form.get('incision_type', patient.incision_type)
+        loc = request.form.get('location', '').strip()
+        patient.location = loc or patient.location
         
         discharge_date_str = request.form.get('discharge_date')
         if discharge_date_str:
@@ -145,9 +170,15 @@ def edit_patient(patient_id):
 def discharge_patient(patient_id):
     """Discharge patient from follow-up"""
     patient = Patient.query.get_or_404(patient_id)
-    
+
     # Check authorization
-    if current_user.role not in [UserRole.ADMIN] and patient.primary_doctor_id != current_user.id:
+    if current_user.role == UserRole.ADMIN:
+        pass
+    elif current_user.role == UserRole.CHW:
+        if not current_user.location or patient.location != current_user.location:
+            flash('You do not have permission to discharge this patient.', 'error')
+            return redirect(url_for('dashboard.index'))
+    elif patient.primary_doctor_id != current_user.id:
         flash('You do not have permission to discharge this patient.', 'error')
         return redirect(url_for('dashboard.index'))
     

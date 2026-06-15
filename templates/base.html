@@ -4,268 +4,521 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Post-Cesarean Wound Care System{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Bootstrap 5.3.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6.5 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- AOS Animations -->
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #e74c3c;
-            --success-color: #27ae60;
-            --info-color: #3498db;
+            --primary:       #1e3a5f;
+            --primary-light: #2c5282;
+            --accent:        #e74c3c;
+            --success:       #27ae60;
+            --info:          #3498db;
+            --warning:       #f39c12;
+            --sidebar-w:     250px;
+            --nav-h:         60px;
+            --radius:        12px;
+            --shadow-sm:     0 2px 8px rgba(0,0,0,.08);
+            --shadow-md:     0 6px 24px rgba(0,0,0,.12);
+            --transition:    .2s ease;
         }
-        
+
+        /* ── Global ── */
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            font-size: .95rem;
         }
-        
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f0f4f8; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+
+        /* ── Navbar ── */
         .navbar {
-            background-color: var(--primary-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            height: var(--nav-h);
+            box-shadow: 0 2px 12px rgba(0,0,0,.2);
+            padding: 0 1.25rem;
         }
-        
         .navbar-brand {
             font-weight: 700;
-            font-size: 1.3rem;
+            font-size: 1.25rem;
+            letter-spacing: -.3px;
+            color: #fff !important;
         }
-        
+        .navbar-brand span { color: #63b3ed; }
+        .navbar .nav-link { color: rgba(255,255,255,.85) !important; font-size: .9rem; }
+        .navbar .nav-link:hover { color: #fff !important; }
+        .navbar .dropdown-menu {
+            border: none;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            animation: fadeInDown .15s ease;
+        }
+        @keyframes fadeInDown {
+            from { opacity:0; transform: translateY(-8px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+
+        /* ── Sidebar ── */
         .sidebar {
-            background-color: white;
-            height: 100vh;
+            background: #fff;
+            width: var(--sidebar-w);
+            height: calc(100vh - var(--nav-h));
             position: fixed;
-            top: 0;
+            top: var(--nav-h);
             left: 0;
             overflow-y: auto;
-            box-shadow: 2px 0 4px rgba(0,0,0,.05);
-            margin-top: 56px;
-            width: 250px;
-            padding: 20px 0;
+            box-shadow: 2px 0 8px rgba(0,0,0,.06);
+            padding: 1rem 0 2rem;
+            z-index: 900;
         }
-        
+        .sidebar .sidebar-section {
+            padding: .25rem .75rem;
+            font-size: .7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #a0aec0;
+            margin-top: .75rem;
+        }
+        .sidebar .nav-link {
+            color: #4a5568 !important;
+            padding: .65rem 1.25rem !important;
+            border-left: 3px solid transparent;
+            border-radius: 0 8px 8px 0;
+            margin-right: .5rem;
+            font-size: .88rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            transition: all var(--transition);
+        }
+        .sidebar .nav-link i { width: 18px; text-align: center; font-size: .95rem; }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: linear-gradient(90deg, #ebf4ff 0%, #fff 100%);
+            border-left-color: var(--primary);
+            color: var(--primary) !important;
+        }
+        .sidebar .nav-link.active { font-weight: 600; }
+
+        /* ── Main content ── */
         .main-content {
-            margin-left: 250px;
-            padding-top: 70px;
+            margin-left: var(--sidebar-w);
+            padding-top: calc(var(--nav-h) + 1.5rem);
             min-height: 100vh;
         }
-        
+
+        /* ── Cards ── */
         .card {
-            border-left: 4px solid var(--primary-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
-            margin-bottom: 20px;
+            border: none;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1.25rem;
+            transition: box-shadow var(--transition), transform var(--transition);
         }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card-header {
+            border-radius: var(--radius) var(--radius) 0 0 !important;
+            padding: .875rem 1.25rem;
+            font-weight: 600;
+            border-bottom: none;
         }
-        
-        .btn-primary:hover {
-            background-color: #1a252f;
-            border-color: #1a252f;
-        }
-        
-        .btn-danger {
-            background-color: var(--secondary-color);
-        }
-        
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-        }
-        
-        .alert {
-            border-left: 4px solid;
-        }
-        
-        .nav-link {
-            color: #666 !important;
-            padding: 10px 20px !important;
-            border-left: 3px solid transparent;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            background-color: #f5f7fa;
-            border-left-color: var(--primary-color);
-            color: var(--primary-color) !important;
-        }
-        
+        .card-header.bg-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important; }
+        .card-header.bg-danger  { background: linear-gradient(135deg, #c0392b 0%, var(--accent) 100%) !important; }
+        .card-header.bg-success { background: linear-gradient(135deg, #1e8449 0%, var(--success) 100%) !important; }
+        .card-header.bg-secondary { background: linear-gradient(135deg, #555 0%, #777 100%) !important; }
+
+        /* ── Stat cards ── */
         .stat-card {
-            padding: 16px;
-            background: #ffffff;
-            border-radius: 14px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            padding: 1.25rem .75rem;
+            background: #fff;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
             text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            transition: transform var(--transition), box-shadow var(--transition);
+            border-top: 4px solid var(--primary);
+            height: 100%;
         }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 0, 0, 0.12);
-            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.07);
-        }
-        
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .stat-card.stat-success { border-top-color: var(--success); }
+        .stat-card.stat-info    { border-top-color: var(--info); }
+        .stat-card.stat-warning { border-top-color: var(--warning); }
+        .stat-card.stat-danger  { border-top-color: var(--accent); }
         .stat-number {
             font-size: 2.2rem;
             font-weight: 700;
-            color: var(--primary-color);
-            letter-spacing: -0.02em;
+            color: var(--primary);
+            line-height: 1;
+            letter-spacing: -1px;
         }
-        
         .stat-label {
-            color: #5f6d7a;
-            font-size: 0.95rem;
-            margin-top: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+            color: #718096;
+            font-size: .78rem;
+            margin-top: .5rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: .05em;
             font-weight: 600;
-        }
-        
-        .stat-label i {
-            font-size: 0.95rem;
-            color: var(--primary-color);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 16px;
-            border-radius: 50%;
-            background: rgba(52, 152, 219, 0.12);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary-color);
-            box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.18);
+            gap: .35rem;
+            flex-wrap: wrap;
         }
-
-        .stat-icon i {
-            font-size: 1.35rem;
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto .65rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            background: rgba(30,58,95,.1);
+            color: var(--primary);
         }
-        /* Mobile / Android-friendly adjustments */
-        @media (max-width: 991.98px) {
-            .sidebar {
-                position: relative;
-                height: auto;
-                width: 100%;
-                margin-top: 56px;
-                box-shadow: none;
-                padding: 10px 0;
-                overflow: visible;
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding-top: 20px;
-            }
-
-            .nav-link {
-                padding: 14px 16px !important;
-                font-size: 1rem;
-            }
-
-            .navbar .navbar-brand {
-                font-size: 1.1rem;
-            }
-
-            .btn {
-                min-height: 44px; /* larger tap target for mobile */
-            }
+        /* clickable stat card */
+        a.stat-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
         }
-
+        a.stat-link:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            text-decoration: none;
+            color: inherit;
+        }
+        a.stat-link:focus-visible {
+            outline: 3px solid var(--primary-light);
+            outline-offset: 2px;
+        }
+        /* xs screens: more compact stat cards */
         @media (max-width: 575.98px) {
-            .navbar-brand {
-                font-size: 1rem;
-            }
+            .stat-card           { padding: .85rem .5rem; }
+            .stat-icon           { width: 38px; height: 38px; font-size: .95rem; margin-bottom: .4rem; }
+            .stat-number         { font-size: 1.7rem; }
+            .stat-label          { font-size: .7rem; margin-top: .3rem; }
+        }
 
-            .stat-number {
-                font-size: 1.8rem;
-            }
+        /* ── Buttons ── */
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: .88rem;
+            padding: .45rem 1rem;
+            transition: all var(--transition);
+        }
+        .btn:active { transform: scale(.97); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-color: var(--primary);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #162d4a 0%, #1e3a5f 100%);
+            border-color: #162d4a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30,58,95,.35);
+        }
+        .btn-success:hover  { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(39,174,96,.35); }
+        .btn-danger:hover   { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(231,76,60,.35); }
+        .btn-warning:hover  { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(243,156,18,.35); }
+        .btn-info:hover     { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(52,152,219,.35); }
+        .btn-sm { padding: .3rem .7rem; font-size: .8rem; }
+
+        /* ── Forms ── */
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            font-size: .9rem;
+            padding: .55rem .85rem;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(44,82,130,.15);
+        }
+        .form-label { font-weight: 500; font-size: .88rem; color: #4a5568; margin-bottom: .35rem; }
+        .input-group-text {
+            background: #f7fafc;
+            border: 1.5px solid #e2e8f0;
+            color: #718096;
+            border-radius: 8px 0 0 8px;
+        }
+        .input-group .form-control { border-radius: 0 8px 8px 0; }
+
+        /* ── Tables ── */
+        .table { font-size: .88rem; }
+        .table thead th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: .75rem;
+            letter-spacing: .05em;
+            color: #718096;
+            border-bottom: 2px solid #e2e8f0;
+            padding: .75rem 1rem;
+        }
+        .table tbody td { padding: .7rem 1rem; vertical-align: middle; }
+        .table-hover tbody tr { transition: background var(--transition); }
+        .table-hover tbody tr:hover { background: #f7faff; }
+
+        /* ── Badges ── */
+        .badge { border-radius: 6px; font-weight: 500; font-size: .75rem; padding: .35em .7em; }
+
+        /* ── Alerts ── */
+        .alert {
+            border-radius: var(--radius);
+            border-left: 4px solid;
+            font-size: .9rem;
+        }
+        .alert-success { border-left-color: var(--success); }
+        .alert-danger  { border-left-color: var(--accent); }
+        .alert-warning { border-left-color: var(--warning); }
+        .alert-info    { border-left-color: var(--info); }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .page-header h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+        .page-header h2 i { margin-right: .5rem; }
+
+        /* ── Section header inside card ── */
+        .section-title {
+            font-size: .8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: #a0aec0;
+            margin: 1.25rem 0 .75rem;
+        }
+
+        /* ── Back-to-top ── */
+        #backToTop {
+            position: fixed;
+            bottom: 2rem;
+            right: 1.5rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-md);
+            z-index: 1050;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        #backToTop:hover { background: var(--primary-light); transform: translateY(-2px); }
+        #backToTop.visible { display: flex; animation: fadeInUp .3s ease; }
+        @keyframes fadeInUp {
+            from { opacity:0; transform: translateY(8px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+
+        /* ── Loading overlay ── */
+        .btn-loading { pointer-events: none; opacity: .8; }
+        .btn-loading .spinner-border { width: 14px; height: 14px; border-width: 2px; }
+
+        /* ── Pagination ── */
+        .pagination .page-link { border-radius: 8px !important; margin: 0 2px; border: 1.5px solid #e2e8f0; font-weight: 500; }
+        .pagination .page-item.active .page-link { background: var(--primary); border-color: var(--primary); }
+
+        /* ── Offcanvas sidebar ── */
+        .offcanvas { width: var(--sidebar-w) !important; }
+        .offcanvas-header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: #fff; }
+        .offcanvas-header .btn-close { filter: invert(1); }
+
+        /* ── Footer ── */
+        footer {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: #a0aec0;
+            font-size: .85rem;
+        }
+        footer a { color: #63b3ed; text-decoration: none; }
+
+        /* ── Responsive ── */
+        @media (max-width: 991.98px) {
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0; padding-top: calc(var(--nav-h) + 1rem); }
+        }
+        @media (max-width: 575.98px) {
+            .main-content   { padding-top: calc(var(--nav-h) + .75rem); }
+            .page-header h2 { font-size: 1.2rem; }
+            .page-header    { flex-direction: column; align-items: flex-start; gap: .6rem; }
         }
     </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-dark navbar-expand-lg fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-hospital"></i> MubyeYiCare
-            </a>
-            <button class="btn btn-outline-light d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
-                <i class="fas fa-bars"></i>
-            </button>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ current_user.get_full_name() }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
+
+<!-- ─── Navbar ─── -->
+<nav class="navbar navbar-dark navbar-expand-lg fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-heart-pulse me-1"></i> Mubyeyi<span>Care</span>
+        </a>
+
+        <!-- Mobile: sidebar toggle -->
+        <button class="btn btn-outline-light btn-sm d-lg-none me-2" type="button"
+                data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar"
+                aria-controls="mobileSidebar" title="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <button class="navbar-toggler border-0" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <span class="nav-link text-white-50 small d-none d-lg-inline">
+                        <i class="fas fa-circle text-success" style="font-size:.55rem;vertical-align:middle;"></i>
+                        {{ current_user.role.value.capitalize() }}
+                    </span>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
+                       id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center"
+                              style="width:32px;height:32px;color:var(--primary);font-size:.85rem;font-weight:700;">
+                            {{ current_user.first_name[0] | upper }}{{ current_user.last_name[0] | upper }}
+                        </span>
+                        <span class="d-none d-sm-inline">{{ current_user.get_full_name() }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                <i class="fas fa-user-circle me-2 text-primary"></i> My Profile
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
-
-    {% if current_user.is_authenticated %}
-    <!-- Sidebar (desktop) -->
-    <div class="sidebar d-none d-lg-block">
-        <nav class="nav flex-column">
-            <a class="nav-link" href="{{ url_for('dashboard.index') }}">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </a>
-            <a class="nav-link" href="{{ url_for('dashboard.health_education') }}">
-                <i class="fas fa-book-medical"></i> Health Education
-            </a>
-            {% if current_user.role.value != 'patient' %}
-            <a class="nav-link" href="{{ url_for('patients.list_patients') }}">
-                <i class="fas fa-users"></i> Patients
-            </a>
-            <a class="nav-link" href="{{ url_for('dashboard.analytics') }}">
-                <i class="fas fa-chart-bar"></i> Analytics
-            </a>
-            {% if current_user.role.value == 'admin' %}
-            <a class="nav-link" href="{{ url_for('auth.register') }}">
-                <i class="fas fa-user-plus"></i> Register User
-            </a>
-            {% endif %}
-            {% endif %}
-            <a class="nav-link" href="{% if current_user.role.value in ['patient', 'mother'] %}{{ url_for('chat.patient_self_chat') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}">
-                <i class="fas fa-comments"></i> Chat
-            </a>
-        </nav>
     </div>
+</nav>
 
-    <!-- Offcanvas Sidebar (mobile) -->
-    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="mobileSidebarLabel"><i class="fas fa-hospital"></i> MubyeYiCare</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-      </div>
-      <div class="offcanvas-body">
-        <nav class="nav flex-column">
+{% if current_user.is_authenticated %}
+<!-- ─── Desktop Sidebar ─── -->
+<aside class="sidebar d-none d-lg-flex flex-column">
+    <nav class="nav flex-column">
+
+        {% if current_user.role.value in ['patient', 'mother'] %}
+        {# ── Mother / Patient: restricted view ── #}
+        <span class="sidebar-section">My Care</span>
+        <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+            <i class="fas fa-house-medical"></i> My Dashboard
+        </a>
+        <span class="sidebar-section">Communication</span>
+        <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}">
+            <i class="fas fa-comments"></i> Chat with Provider
+        </a>
+
+        {% else %}
+        {# ── Providers / Admin: full navigation ── #}
+        <span class="sidebar-section">Main</span>
+        <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+        <a class="nav-link" href="{{ url_for('dashboard.health_education') }}">
+            <i class="fas fa-book-medical"></i> Health Education
+        </a>
+
+        <span class="sidebar-section">Management</span>
+        <a class="nav-link" href="{{ url_for('patients.list_patients') }}">
+            <i class="fas fa-users"></i> Patients
+        </a>
+        <a class="nav-link" href="{{ url_for('dashboard.analytics') }}">
+            <i class="fas fa-chart-bar"></i> Analytics
+        </a>
+        {% if current_user.role.value == 'admin' %}
+        <a class="nav-link" href="{{ url_for('auth.register') }}">
+            <i class="fas fa-user-plus"></i> Register User
+        </a>
+        {% endif %}
+
+        <span class="sidebar-section">Communication</span>
+        <a class="nav-link" href="{{ url_for('chat.chat_list') }}">
+            <i class="fas fa-comments"></i> Chat
+        </a>
+        {% endif %}
+
+    </nav>
+</aside>
+
+<!-- ─── Mobile Offcanvas Sidebar ─── -->
+<div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title mb-0" id="mobileSidebarLabel">
+            <i class="fas fa-heart-pulse me-1"></i> MubyeyiCare
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <nav class="nav flex-column pt-2">
+
+            {% if current_user.role.value in ['patient', 'mother'] %}
+            {# ── Mother / Patient: restricted view ── #}
+            <span class="sidebar-section">My Care</span>
+            <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas">
+                <i class="fas fa-house-medical"></i> My Dashboard
+            </a>
+            <span class="sidebar-section">Communication</span>
+            <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}" data-bs-dismiss="offcanvas">
+                <i class="fas fa-comments"></i> Chat with Provider
+            </a>
+
+            {% else %}
+            {# ── Providers / Admin: full navigation ── #}
+            <span class="sidebar-section">Main</span>
             <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
             <a class="nav-link" href="{{ url_for('dashboard.health_education') }}" data-bs-dismiss="offcanvas">
                 <i class="fas fa-book-medical"></i> Health Education
             </a>
-            {% if current_user.role.value != 'patient' %}
+
+            <span class="sidebar-section">Management</span>
             <a class="nav-link" href="{{ url_for('patients.list_patients') }}" data-bs-dismiss="offcanvas">
                 <i class="fas fa-users"></i> Patients
             </a>
@@ -277,41 +530,148 @@
                 <i class="fas fa-user-plus"></i> Register User
             </a>
             {% endif %}
-            {% endif %}
-            <a class="nav-link" href="{% if current_user.role.value in ['patient', 'mother'] %}{{ url_for('chat.patient_self_chat') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}" data-bs-dismiss="offcanvas">
+
+            <span class="sidebar-section">Communication</span>
+            <a class="nav-link" href="{{ url_for('chat.chat_list') }}" data-bs-dismiss="offcanvas">
                 <i class="fas fa-comments"></i> Chat
             </a>
+            {% endif %}
+
         </nav>
-      </div>
     </div>
-    {% endif %}
+</div>
+{% endif %}
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container-fluid p-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+<!-- ─── Main content ─── -->
+<main class="main-content">
+    <div class="container-fluid px-4">
 
-            {% block content %}{% endblock %}
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert" data-auto-dismiss="5000">
+                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category in ['error','warning'] else 'info-circle' }} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<!-- ─── Footer ─── -->
+<footer class="py-4 mt-5" style="margin-left: var(--sidebar-w);">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <p class="mb-0">
+                    <i class="fas fa-heart-pulse text-danger me-1"></i>
+                    <strong class="text-white">MubyeyiCare</strong> &copy; 2026 &mdash; Post-Cesarean Wound Care System
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                <small>Built with <i class="fas fa-heart text-danger"></i> for maternal health</small>
+            </div>
         </div>
     </div>
+</footer>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white mt-5 py-3 text-center">
-        <div class="container">
-            <p>&copy; 2026 Post-Cesarean Wound Care System. All rights reserved.</p>
-        </div>
-    </footer>
+<!-- ─── Back to top ─── -->
+<button id="backToTop" title="Back to top" aria-label="Back to top">
+    <i class="fas fa-chevron-up"></i>
+</button>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
+<!-- Bootstrap 5.3.3 Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AOS -->
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ── AOS init ── */
+    AOS.init({ duration: 400, once: true, offset: 40 });
+
+    /* ── Bootstrap tooltips ── */
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        new bootstrap.Tooltip(el, { trigger: 'hover' });
+    });
+
+    /* ── Bootstrap popovers ── */
+    document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (el) {
+        new bootstrap.Popover(el);
+    });
+
+    /* ── Auto-dismiss alerts ── */
+    document.querySelectorAll('[data-auto-dismiss]').forEach(function (el) {
+        var delay = parseInt(el.dataset.autoDismiss, 10) || 5000;
+        setTimeout(function () {
+            var bsAlert = bootstrap.Alert.getOrCreateInstance(el);
+            bsAlert.close();
+        }, delay);
+    });
+
+    /* ── Active sidebar link ── */
+    var path = window.location.pathname;
+    document.querySelectorAll('.sidebar .nav-link, .offcanvas .nav-link').forEach(function (link) {
+        var href = link.getAttribute('href');
+        if (href && path.startsWith(href) && href !== '/') {
+            link.classList.add('active');
+        } else if (href === '/' && path === '/') {
+            link.classList.add('active');
+        }
+    });
+
+    /* ── Back to top ── */
+    var btn = document.getElementById('backToTop');
+    if (btn) {
+        window.addEventListener('scroll', function () {
+            btn.classList.toggle('visible', window.scrollY > 300);
+        }, { passive: true });
+        btn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    /* ── Form submit spinner ── */
+    document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function () {
+            var submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn && !submitBtn.classList.contains('no-spinner')) {
+                var icon = submitBtn.querySelector('i');
+                if (icon) {
+                    icon.className = 'spinner-border spinner-border-sm me-1';
+                }
+                submitBtn.classList.add('btn-loading');
+            }
+        });
+    });
+
+    /* ── Confirm delete modals ── */
+    document.querySelectorAll('[data-confirm]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            if (!confirm(el.dataset.confirm)) e.preventDefault();
+        });
+    });
+
+    /* ── Password visibility toggle ── */
+    document.querySelectorAll('.toggle-password').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var input = document.getElementById(btn.dataset.target);
+            if (!input) return;
+            var isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.querySelector('i').className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+    });
+})();
+</script>
+
+{% block extra_js %}{% endblock %}
 </body>
 </html>

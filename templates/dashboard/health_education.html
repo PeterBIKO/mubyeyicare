@@ -1,63 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}Health Education - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}Health Education - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
+<div class="page-header" data-aos="fade-down">
+    <div>
         <h2><i class="fas fa-book-medical"></i> Health Education</h2>
-        <p class="text-muted">Browse recovery guidance, wound care tips, and when to contact your care team.</p>
+        <p class="text-muted small mb-0">Recovery guidance, wound care tips, and when to contact your care team.</p>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Patient Education Topics</h5>
-            </div>
-            <div class="card-body">
-                <div class="row gy-4">
-                    {% for topic in health_education %}
-                    <div class="col-12 col-md-6">
-                        <div class="border rounded p-3 h-100 d-flex flex-column">
-                            <div>
-                                <h6>{{ topic.title }}</h6>
-                                <p class="mb-1 text-muted">{{ topic.description }}</p>
-                                <p class="mb-3 text-secondary fst-italic">{{ topic.title_rw }}</p>
-                                <p class="mb-3 text-secondary">{{ topic.description_rw }}</p>
+<!-- Education topics -->
+<div class="card mb-4" data-aos="fade-up">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-graduation-cap me-2"></i> Patient Education Topics
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for topic in health_education %}
+            <div class="col-12 col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 40 }}">
+                <div class="card h-100 border">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex align-items-start gap-3 mb-2">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:40px;height:40px;background:linear-gradient(135deg,#1e3a5f,#2c5282);">
+                                <i class="fas fa-heart-pulse text-white" style="font-size:.85rem;"></i>
                             </div>
-                            <button class="btn btn-outline-primary mt-auto w-100" type="button" data-bs-toggle="collapse" data-bs-target="#topic-details-{{ loop.index0 }}" aria-expanded="false" aria-controls="topic-details-{{ loop.index0 }}">
-                                Learn more
-                            </button>
-                            <div class="collapse mt-3" id="topic-details-{{ loop.index0 }}">
-                                <div class="card card-body bg-light border">
-                                    <p class="mb-2">{{ topic.details }}</p>
-                                    <p class="mb-0 text-secondary">{{ topic.details_rw }}</p>
-                                </div>
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ topic.title }}</h6>
+                                <small class="text-muted fst-italic">{{ topic.title_rw }}</small>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-1">{{ topic.description }}</p>
+                        <p class="text-muted small fst-italic mb-3">{{ topic.description_rw }}</p>
+
+                        <button class="btn btn-outline-primary btn-sm mt-auto no-spinner" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#topic-{{ loop.index0 }}"
+                                aria-expanded="false">
+                            <i class="fas fa-chevron-down me-1"></i> Learn more
+                        </button>
+
+                        <div class="collapse mt-3" id="topic-{{ loop.index0 }}">
+                            <div class="p-3 bg-light rounded-3 border small">
+                                <p class="mb-2">{{ topic.details }}</p>
+                                <p class="mb-0 text-muted fst-italic">{{ topic.details_rw }}</p>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Post-Cesarean Care Simulation</h5>
-            </div>
-            <div class="card-body">
-                <p class="text-muted mb-4">Watch this guided simulation for post-cesarean recovery care, including wound hygiene, safe movement, and when to reach out to your care team.</p>
-                <div class="ratio ratio-16x9">
-                    <iframe src="https://www.youtube.com/embed/gmKfV7J4YN8" title="Post-Cesarean Care Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-            </div>
+<!-- Video -->
+<div class="card" data-aos="fade-up">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-video me-2"></i> Post-Cesarean Care Simulation
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">
+            Watch this guided simulation for post-cesarean recovery care, including wound hygiene,
+            safe movement, and when to reach out to your care team.
+        </p>
+        <div class="ratio ratio-16x9">
+            <iframe src="https://www.youtube.com/embed/gmKfV7J4YN8"
+                    title="Post-Cesarean Care"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    class="rounded-3"></iframe>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Change collapse button text */
+document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function (btn) {
+    var target = document.querySelector(btn.getAttribute('data-bs-target'));
+    if (!target) return;
+    target.addEventListener('shown.bs.collapse',  function () { btn.innerHTML = '<i class="fas fa-chevron-up me-1"></i> Show less'; });
+    target.addEventListener('hidden.bs.collapse', function () { btn.innerHTML = '<i class="fas fa-chevron-down me-1"></i> Learn more'; });
+});
+</script>
 {% endblock %}

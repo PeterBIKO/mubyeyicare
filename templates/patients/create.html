@@ -1,99 +1,152 @@
 {% extends "base.html" %}
 
-{% block title %}Add New Patient - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}Register New Patient - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-user-plus"></i> Register New Patient</h2>
+    <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Patients
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9" data-aos="fade-up">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Register New Patient</h4>
+                <i class="fas fa-id-card me-2"></i> Patient Information
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <form method="POST" action="{{ url_for('patients.create_patient') }}">
-                    <h6 class="mb-3">Personal Information</h6>
-                    
+
+                    <p class="section-title">Personal Details</p>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="mrn" class="form-label">Medical Record Number (MRN) *</label>
-                            <input type="text" class="form-control" id="mrn" name="mrn" required>
+                            <label for="mrn" class="form-label">Medical Record Number (MRN) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-id-badge"></i></span>
+                                <input type="text" class="form-control" id="mrn" name="mrn" placeholder="e.g. MRN-001" required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="gender" class="form-label">Gender *</label>
-                            <select class="form-select" id="gender" name="gender" required>
-                                <option value="">Select Gender</option>
-                                <option value="Female">Female</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-venus-mars"></i></span>
+                                <select class="form-select" id="gender" name="gender" style="border-left:none;" required>
+                                    <option value="">— Select Gender —</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">First Name *</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="first_name" name="first_name" placeholder="First name" required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Last Name *</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last name" required>
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="date_of_birth" class="form-label">Date of Birth *</label>
-                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                            <label for="date_of_birth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="phone" class="form-label">Phone Number *</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+250 ..." required>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Patient email (optional)">
                         </div>
                     </div>
 
-                    <hr>
-                    <h6 class="mb-3">Cesarean Surgery Details</h6>
+                    <hr class="my-3">
+                    <p class="section-title">Cesarean Surgery Details</p>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="surgery_date" class="form-label">Surgery Date *</label>
-                            <input type="date" class="form-control" id="surgery_date" name="surgery_date" required>
+                            <label for="surgery_date" class="form-label">Surgery Date <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-scalpel"></i></span>
+                                <input type="date" class="form-control" id="surgery_date" name="surgery_date" required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="surgery_type" class="form-label">Surgery Type</label>
-                            <input type="text" class="form-control" id="surgery_type" name="surgery_type" placeholder="e.g., Primary Cesarean">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-notes-medical"></i></span>
+                                <input type="text" class="form-control" id="surgery_type" name="surgery_type" placeholder="e.g., Primary Cesarean">
+                            </div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="surgeon_name" class="form-label">Surgeon Name</label>
-                            <input type="text" class="form-control" id="surgeon_name" name="surgeon_name">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user-doctor"></i></span>
+                                <input type="text" class="form-control" id="surgeon_name" name="surgeon_name" placeholder="Surgeon's full name">
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="incision_type" class="form-label">Incision Type</label>
-                            <select class="form-select" id="incision_type" name="incision_type">
-                                <option value="">Select Incision Type</option>
-                                <option value="Pfannenstiel">Pfannenstiel</option>
-                                <option value="Classical">Classical</option>
-                                <option value="Vertical">Vertical</option>
-                                <option value="T-incision">T-incision</option>
-                            </select>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-cut"></i></span>
+                                <select class="form-select" id="incision_type" name="incision_type" style="border-left:none;">
+                                    <option value="">— Select Incision Type —</option>
+                                    <option value="Pfannenstiel">Pfannenstiel</option>
+                                    <option value="Classical">Classical</option>
+                                    <option value="Vertical">Vertical</option>
+                                    <option value="T-incision">T-incision</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
+                    <hr class="my-3">
+                    <p class="section-title">Location</p>
+                    <div class="mb-3">
+                        <label for="location" class="form-label">
+                            Patient Location
+                            <small class="text-muted fw-normal ms-1">— used to assign community health workers</small>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-location-dot"></i></span>
+                            <input type="text" class="form-control" id="location" name="location"
+                                   placeholder="e.g. Gasabo / Kinyinya">
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Register Patient
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-1"></i> Register Patient
                         </button>
-                        <a href="{{ url_for('patients.list_patients') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
+                        <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
                         </a>
                     </div>
                 </form>

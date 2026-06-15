@@ -1,53 +1,320 @@
 {% extends "base.html" %}
 
-{% block title %}My Dashboard - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}My Dashboard - MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vital-box {
+        border-radius: 14px;
+        padding: 1rem .75rem;
+        text-align: center;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .vital-box:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.1); }
+    .vital-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .vital-unit  { font-size: .7rem; color: #718096; margin-top: .2rem; }
+    .vital-icon  { font-size: 1.2rem; margin-bottom: .4rem; display: block; }
+
+    .alert-item {
+        display: flex;
+        align-items: flex-start;
+        gap: .75rem;
+        padding: .75rem 1rem;
+        border-left: 3px solid transparent;
+        transition: background .15s;
+    }
+    .alert-item:hover { background: #fff9f9; }
+    .alert-item.critical { border-left-color: #e74c3c; }
+    .alert-item.high     { border-left-color: #e67e22; }
+    .alert-item.medium   { border-left-color: #f39c12; }
+    .alert-item.low      { border-left-color: #3498db; }
+
+    .provider-card {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        border-radius: 16px;
+        color: #fff;
+        padding: 1.5rem;
+    }
+    .provider-avatar {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.18);
+        border: 2px solid rgba(255,255,255,.3);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; font-weight: 700;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2><i class="fas fa-heartbeat"></i> Welcome, {{ patient.get_full_name() }}</h2>
-        <p class="text-muted">Your dashboard is focused on your latest vital signs. Use the menu to access health education and chat.</p>
+<!-- Welcome bar -->
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h2><i class="fas fa-heart-pulse me-2 text-danger"></i> Welcome, {{ patient.get_full_name() }}</h2>
+        <p class="text-muted mb-0 small">
+            <i class="fas fa-calendar-days me-1"></i>
+            Day <strong>{{ patient.days_post_surgery() }}</strong> of recovery
+            &nbsp;&middot;&nbsp;
+            <i class="fas fa-id-card me-1"></i> {{ patient.mrn }}
+        </p>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="{{ url_for('chat.patient_self_chat') }}" class="btn btn-primary">
-            <i class="fas fa-comments"></i> Open Chat
-        </a>
-    </div>
+    <a href="{{ url_for('chat.patient_self_chat') }}" class="btn btn-primary">
+        <i class="fas fa-comments me-1"></i> Chat with Provider
+    </a>
 </div>
 
-<div class="row">
-    <div class="col-12 col-lg-6">
-        <div class="card mb-4">
+<div class="row g-3">
+
+    <!-- ── 1. ALERTS ── -->
+    <div class="col-12 col-md-6" data-aos="fade-up" data-aos-delay="0">
+        <div class="card h-100">
+            <div class="card-header bg-danger text-white d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-bell me-2"></i> Alerts</span>
+                {% if alerts %}
+                <span class="badge bg-white text-danger">{{ alerts | length }}</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-0" style="overflow-y:auto;max-height:380px;">
+                {% if alerts %}
+                    {% for alert in alerts %}
+                    {% set sev = alert.severity | lower %}
+                    <div class="alert-item {{ sev }}">
+                        <div class="flex-shrink-0 mt-1">
+                            <span class="badge bg-{{
+                                'danger'  if sev == 'critical' else
+                                'warning text-dark' if sev in ['high','medium'] else
+                                'info'
+                            }}">{{ alert.severity }}</span>
+                        </div>
+                        <div>
+                            <p class="mb-0 fw-medium small">{{ alert.alert_type }}</p>
+                            <p class="mb-0 text-muted" style="font-size:.78rem;">{{ alert.message }}</p>
+                            <small class="text-muted">{{ alert.created_at.strftime('%b %d, %Y') }}</small>
+                        </div>
+                    </div>
+                    {% if not loop.last %}<hr class="my-0 mx-3">{% endif %}
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-shield-check fa-2x d-block mb-2 opacity-25 text-success"></i>
+                    <p class="small mb-0 fw-medium text-success">No active alerts</p>
+                    <p class="small text-muted">Your recovery is on track.</p>
+                </div>
+                {% endif %}
+            </div>
+            {% if alerts %}
+            <div class="card-footer bg-transparent border-top py-2 text-center small text-muted">
+                <i class="fas fa-circle-info me-1"></i>
+                Contact your provider for any concerns
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── 2. VITAL SIGNS ── -->
+    <div class="col-12 col-md-6" data-aos="fade-up" data-aos-delay="60">
+        <div class="card h-100">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Latest Vitals</h5>
+                <i class="fas fa-stethoscope me-2"></i> Vital Signs
             </div>
             <div class="card-body">
                 {% if recent_vitals %}
-                    {% set vitals = recent_vitals[0] %}
-                    <p><strong>Date:</strong> {{ vitals.recorded_date.strftime('%B %d, %Y') }}</p>
-                    <p><strong>Blood Pressure:</strong> {{ vitals.blood_pressure_systolic }}/{{ vitals.blood_pressure_diastolic }} mmHg</p>
-                    <p><strong>Heart Rate:</strong> {{ vitals.heart_rate }} bpm</p>
-                    <p><strong>Temperature:</strong> {{ vitals.temperature }}°C</p>
-                    <p><strong>O₂ Saturation:</strong> {{ vitals.oxygen_saturation }}%</p>
-                    <p><strong>Weight:</strong> {{ vitals.weight }} kg</p>
+                    {% set v = recent_vitals[0] %}
+                    <p class="text-muted small mb-3 text-center">
+                        <i class="fas fa-clock me-1"></i>
+                        Last recorded: <strong>{{ v.recorded_date.strftime('%b %d, %Y') }}</strong>
+                    </p>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="vital-box" style="background:#f0f7ff;border:1px solid #bee3f8;">
+                                <span class="vital-icon text-danger"><i class="fas fa-heart"></i></span>
+                                <div class="vital-value text-danger">{{ v.blood_pressure_systolic }}/{{ v.blood_pressure_diastolic }}</div>
+                                <div class="vital-unit">Blood Pressure<br>mmHg</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="vital-box" style="background:#f0fff4;border:1px solid #c6f6d5;">
+                                <span class="vital-icon text-success"><i class="fas fa-heartbeat"></i></span>
+                                <div class="vital-value text-success">{{ v.heart_rate }}</div>
+                                <div class="vital-unit">Heart Rate<br>bpm</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="vital-box" style="background:#fff8f0;border:1px solid #fde8c8;">
+                                <span class="vital-icon text-warning"><i class="fas fa-thermometer-half"></i></span>
+                                <div class="vital-value text-warning">{{ v.temperature }}°C</div>
+                                <div class="vital-unit">Temperature</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="vital-box" style="background:#f5f0ff;border:1px solid #e9d8fd;">
+                                <span class="vital-icon" style="color:#9f7aea;"><i class="fas fa-lungs"></i></span>
+                                <div class="vital-value" style="color:#9f7aea;">{{ v.oxygen_saturation }}%</div>
+                                <div class="vital-unit">O₂ Saturation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if recent_vitals | length > 1 %}
+                    <hr class="my-3">
+                    <p class="text-muted small fw-medium mb-1">Previous readings</p>
+                    {% for pv in recent_vitals[1:] %}
+                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom small">
+                        <span class="text-muted">{{ pv.recorded_date.strftime('%b %d') }}</span>
+                        <span>
+                            <i class="fas fa-heart text-danger me-1"></i>{{ pv.blood_pressure_systolic }}/{{ pv.blood_pressure_diastolic }}
+                            &nbsp;<i class="fas fa-heartbeat text-success me-1"></i>{{ pv.heart_rate }} bpm
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
                 {% else %}
-                    <p class="text-muted">No vital sign records are available yet.</p>
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-chart-line fa-2x d-block mb-2 opacity-25"></i>
+                    <p class="small mb-0">No vital signs recorded yet.</p>
+                    <p class="small">Your provider will record these at your next visit.</p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-12 col-md-6">
-        <a href="{{ url_for('dashboard.health_education') }}" class="btn btn-outline-secondary w-100 mb-3">
-            <i class="fas fa-book-medical"></i> View Health Education
-        </a>
+    <!-- ── 3. WOUND ASSESSMENTS ── -->
+    <div class="col-12 col-md-6" data-aos="fade-up" data-aos-delay="90">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-bandage me-2"></i> Wound Assessments</span>
+                {% if recent_assessments %}
+                <span class="badge bg-dark text-white">{{ recent_assessments | length }}</span>
+                {% endif %}
+            </div>
+            <div class="card-body p-0" style="overflow-y:auto;max-height:380px;">
+                {% if recent_assessments %}
+                    {% for a in recent_assessments %}
+                    {% set s = a.status.value %}
+                    <div class="p-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fw-semibold small">
+                                {{ a.assessment_date.strftime('%b %d, %Y') }}
+                            </span>
+                            <span class="badge bg-{{
+                                'success'  if s == 'excellent' else
+                                'primary'  if s == 'good' else
+                                'warning text-dark' if s == 'fair' else
+                                'danger'   if s in ['poor','infected'] else
+                                'secondary'
+                            }}">{{ s.capitalize() }}</span>
+                        </div>
+                        <div class="row g-1 small text-muted mb-1">
+                            <div class="col-6">
+                                <i class="fas fa-face-grimace me-1"></i>
+                                Pain: <strong class="text-dark">{{ a.pain_level }}/10</strong>
+                            </div>
+                            <div class="col-6">
+                                <i class="fas fa-chart-line me-1"></i>
+                                {{ a.healing_progress or '—' }}
+                            </div>
+                            {% if a.redness_present or a.swelling_present or a.discharge_present or a.infection_signs or a.dehiscence_present %}
+                            <div class="col-12 mt-1">
+                                {% if a.redness_present %}<span class="badge bg-danger-subtle text-danger me-1">Redness</span>{% endif %}
+                                {% if a.swelling_present %}<span class="badge bg-warning-subtle text-warning-emphasis me-1">Swelling</span>{% endif %}
+                                {% if a.discharge_present %}<span class="badge bg-info-subtle text-info-emphasis me-1">Discharge</span>{% endif %}
+                                {% if a.dehiscence_present %}<span class="badge bg-danger-subtle text-danger me-1">Dehiscence</span>{% endif %}
+                                {% if a.infection_signs %}<span class="badge bg-danger-subtle text-danger me-1">Infection</span>{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if a.observations %}
+                        <p class="mb-0 small text-muted fst-italic" style="font-size:.78rem;">
+                            "{{ a.observations | truncate(80) }}"
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-clipboard fa-2x d-block mb-2 opacity-25"></i>
+                    <p class="small mb-0">No wound assessments recorded yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    <div class="col-12 col-md-6">
-        <a href="{{ url_for('chat.patient_self_chat') }}" class="btn btn-outline-primary w-100 mb-3">
-            <i class="fas fa-comments"></i> Open Chat with Provider
-        </a>
+
+    <!-- ── 4. CARE PROVIDER CONTACT ── -->
+    <div class="col-12 col-md-6" data-aos="fade-up" data-aos-delay="120">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-user-doctor me-2"></i> Your Care Provider
+            </div>
+            <div class="card-body d-flex flex-column gap-3">
+                {% if primary_doctor %}
+                <div class="provider-card">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="provider-avatar">
+                            {{ primary_doctor.first_name[0] | upper }}{{ primary_doctor.last_name[0] | upper }}
+                        </div>
+                        <div>
+                            <div class="fw-bold fs-6">{{ primary_doctor.get_full_name() }}</div>
+                            <div class="small" style="color:rgba(255,255,255,.75);">
+                                {{ primary_doctor.role.value.capitalize() }}
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled mb-0 small">
+                        {% if primary_doctor.email %}
+                        <li class="d-flex align-items-center gap-2 mb-2">
+                            <i class="fas fa-envelope" style="width:16px;color:rgba(255,255,255,.6);"></i>
+                            <span style="color:rgba(255,255,255,.9);">{{ primary_doctor.email }}</span>
+                        </li>
+                        {% endif %}
+                        {% if primary_doctor.phone %}
+                        <li class="d-flex align-items-center gap-2 mb-2">
+                            <i class="fas fa-phone" style="width:16px;color:rgba(255,255,255,.6);"></i>
+                            <span style="color:rgba(255,255,255,.9);">{{ primary_doctor.phone }}</span>
+                        </li>
+                        {% endif %}
+                        <li class="d-flex align-items-center gap-2">
+                            <i class="fas fa-circle-dot" style="width:16px;color:rgba(255,255,255,.6);"></i>
+                            <span style="color:rgba(255,255,255,.9);">Available via chat</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <a href="{{ url_for('chat.patient_self_chat') }}" class="btn btn-primary w-100">
+                    <i class="fas fa-paper-plane me-2"></i> Message {{ primary_doctor.first_name }}
+                </a>
+
+                <a href="{{ url_for('chat.patient_choose_provider') }}" class="btn btn-outline-secondary w-100 btn-sm">
+                    <i class="fas fa-users me-2"></i> Chat with a different provider
+                </a>
+
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-user-slash fa-2x d-block mb-2 opacity-25"></i>
+                    <p class="small mb-2">No care provider assigned yet.</p>
+                </div>
+                <a href="{{ url_for('chat.patient_choose_provider') }}" class="btn btn-primary w-100">
+                    <i class="fas fa-comments me-2"></i> Chat with a Provider
+                </a>
+                {% endif %}
+
+                <!-- Emergency reminder -->
+                <div class="alert alert-danger mb-0 small" style="border-left:4px solid #e74c3c;">
+                    <p class="fw-semibold mb-1">
+                        <i class="fas fa-triangle-exclamation me-1"></i> Seek urgent care if you have:
+                    </p>
+                    <ul class="mb-0 ps-3">
+                        <li>Heavy bleeding or foul discharge</li>
+                        <li>Fever above 38°C</li>
+                        <li>Severe or worsening pain</li>
+                        <li>Wound opening</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
+
 </div>
 {% endblock %}

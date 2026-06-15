@@ -1,52 +1,141 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}Login - MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 40%, #1a365d 100%) !important; }
+    .main-content { margin-left: 0 !important; padding-top: 0 !important; }
+    footer { display: none; }
+    #backToTop { display: none !important; }
+
+    .login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .login-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        overflow: hidden;
+        width: 100%;
+        max-width: 440px;
+        animation: slideUp .5s ease;
+    }
+    @keyframes slideUp {
+        from { opacity:0; transform: translateY(30px); }
+        to   { opacity:1; transform: translateY(0); }
+    }
+    .login-card .card-top {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+        padding: 2.5rem 2rem 2rem;
+        text-align: center;
+        color: #fff;
+    }
+    .login-card .card-top .brand-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.8rem;
+        border: 2px solid rgba(255,255,255,.25);
+    }
+    .login-card .card-top h1 { font-size: 1.6rem; font-weight: 700; margin: 0 0 .25rem; }
+    .login-card .card-top p  { color: rgba(255,255,255,.75); font-size: .88rem; margin: 0; }
+    .login-card .card-body   { padding: 2rem; }
+    .input-group-text {
+        background: #f7fafc;
+        border: 1.5px solid #e2e8f0;
+        color: #718096;
+    }
+    .input-group .form-control { border-left: none; }
+    .input-group:focus-within .input-group-text { border-color: #2c5282; color: #2c5282; }
+    .btn-toggle-pw {
+        background: #f7fafc;
+        border: 1.5px solid #e2e8f0;
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        color: #718096;
+        cursor: pointer;
+        padding: 0 .75rem;
+        transition: color .2s;
+    }
+    .btn-toggle-pw:hover { color: #2c5282; }
+    .demo-box {
+        background: #f0f7ff;
+        border: 1px solid #bee3f8;
+        border-radius: 10px;
+        padding: .75rem 1rem;
+        font-size: .82rem;
+        color: #2b6cb0;
+    }
+    .demo-box strong { color: #1a365d; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-5">
-            <div class="card mt-5">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <h2 class="mb-3">
-                            <i class="fas fa-hospital" style="color: #2c3e50;"></i>
-                        </h2>
-                        <h3>MubyeYiCare</h3>
-                        <p class="text-muted">Post-Cesarean Wound Care System</p>
-                    </div>
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="card-top">
+            <div class="brand-icon">
+                <i class="fas fa-heart-pulse"></i>
+            </div>
+            <h1>MubyeyiCare</h1>
+            <p>Post-Cesarean Wound Care System</p>
+        </div>
 
-                    <form method="POST" action="{{ url_for('auth.login') }}">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('auth.login') }}">
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                            <label class="form-check-label" for="remember">
-                                Remember me
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
-                    </form>
-
-                    <hr>
-
-                    <div class="alert alert-info" role="alert">
-                        <small>
-                            <strong>Demo Credentials:</strong><br>
-                            Username: admin<br>
-                            Password: admin123
-                        </small>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control" id="username" name="username"
+                               placeholder="Enter your username" required autocomplete="username">
                     </div>
                 </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="Enter your password" required autocomplete="current-password">
+                        <button type="button" class="btn-toggle-pw toggle-password" data-target="password"
+                                title="Show/hide password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="form-check mb-0">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label small" for="remember">Remember me</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fs-6">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                </button>
+            </form>
+
+            <hr class="my-3">
+
+            <div class="demo-box">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="fas fa-circle-info"></i>
+                    <strong>Demo Credentials</strong>
+                </div>
+                <div>Username: <code>admin</code> &nbsp; Password: <code>admin123</code></div>
             </div>
         </div>
     </div>

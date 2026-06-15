@@ -1,55 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}Choose Healthcare Provider - MubyeYiCare{% endblock %}
+{% block title %}Choose Healthcare Provider - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0">Select a Healthcare Provider</h5>
-                    <small class="text-white-50">Choose a doctor, nurse, or community health worker to chat with.</small>
-                </div>
-                <a href="{{ url_for('dashboard.patient_dashboard') }}" class="btn btn-light btn-sm">
-                    <i class="fas fa-arrow-left"></i> Back to dashboard
-                </a>
-            </div>
-            <div class="card-body">
-                {% if providers %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Provider</th>
-                                <th>Role</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for provider in providers %}
-                            <tr>
-                                <td>{{ provider.get_full_name() }}</td>
-                                <td>{{ provider.role.value.capitalize() }}</td>
-                                <td>{{ provider.email or 'N/A' }}</td>
-                                <td>{{ provider.phone or 'N/A' }}</td>
-                                <td>
-                                    <a href="{{ url_for('chat.patient_chat', patient_id=patient.id, provider_id=provider.id) }}" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-comments"></i> Chat
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted">No healthcare providers are registered yet.</p>
-                {% endif %}
-            </div>
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-stethoscope"></i> Select a Healthcare Provider</h2>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="card" data-aos="fade-up">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-user-doctor me-2"></i> Available Providers
+        <small class="text-white-50 ms-2">— Choose a doctor, nurse, or CHW to start chatting</small>
+    </div>
+    <div class="card-body p-0">
+        {% if providers %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for provider in providers %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center text-white"
+                                      style="width:32px;height:32px;font-size:.78rem;font-weight:700;flex-shrink:0;">
+                                    {{ provider.first_name[0] | upper }}{{ provider.last_name[0] | upper }}
+                                </span>
+                                <span class="fw-medium">{{ provider.get_full_name() }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                                {{ provider.role.value.capitalize() }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">{{ provider.email or '—' }}</td>
+                        <td class="text-muted small">{{ provider.phone or '—' }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('chat.patient_chat', patient_id=patient.id, provider_id=provider.id) }}"
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-comments me-1"></i> Chat
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fas fa-user-slash fa-2x d-block mb-2 opacity-30"></i>
+            No healthcare providers are registered yet.
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

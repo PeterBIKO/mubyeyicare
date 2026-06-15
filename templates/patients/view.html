@@ -1,94 +1,129 @@
 {% extends "base.html" %}
 
-{% block title %}Patient Details - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}{{ patient.get_full_name() }} - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-    <div class="col-md-8">
-        <h2><i class="fas fa-user"></i> {{ patient.get_full_name() }}</h2>
+<!-- Header -->
+<div class="page-header" data-aos="fade-down">
+    <div>
+        <h2><i class="fas fa-user-circle me-2"></i>{{ patient.get_full_name() }}</h2>
+        <p class="text-muted mb-0 small">
+            <code>{{ patient.mrn }}</code> &nbsp;|&nbsp;
+            {{ patient.days_post_surgery() }} days post-surgery
+        </p>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}" class="btn btn-info me-2">
-            <i class="fas fa-comments"></i> Chat
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}" class="btn btn-info btn-sm">
+            <i class="fas fa-comments me-1"></i> Chat
         </a>
-        <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}" class="btn btn-warning">
-            <i class="fas fa-edit"></i> Edit
+        <a href="{{ url_for('patients.edit_patient', patient_id=patient.id) }}" class="btn btn-warning btn-sm">
+            <i class="fas fa-pen me-1"></i> Edit
         </a>
         {% if patient.is_active %}
-        <form method="POST" action="{{ url_for('patients.discharge_patient', patient_id=patient.id) }}" style="display: inline;">
-            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to discharge this patient?');">
-                <i class="fas fa-sign-out-alt"></i> Discharge
+        <form method="POST" action="{{ url_for('patients.discharge_patient', patient_id=patient.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger btn-sm"
+                    data-confirm="Are you sure you want to discharge this patient?">
+                <i class="fas fa-sign-out-alt me-1"></i> Discharge
             </button>
         </form>
         {% endif %}
+        <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <!-- Patient Information Card -->
-        <div class="card mb-3">
+<div class="row g-3">
+    <!-- Left: patient details + tables -->
+    <div class="col-lg-8">
+
+        <!-- Patient Information -->
+        <div class="card mb-3" data-aos="fade-up">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Patient Information</h5>
+                <i class="fas fa-id-card me-2"></i> Patient Information
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>MRN:</strong> {{ patient.mrn }}</p>
-                        <p><strong>Age:</strong> {{ patient.get_age() }} years</p>
-                        <p><strong>Gender:</strong> {{ patient.gender }}</p>
-                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
-                        <p><strong>Email:</strong> {{ patient.email or 'N/A' }}</p>
+                        <dl class="row small mb-0">
+                            <dt class="col-5 text-muted">MRN</dt>
+                            <dd class="col-7"><code>{{ patient.mrn }}</code></dd>
+                            <dt class="col-5 text-muted">Age</dt>
+                            <dd class="col-7">{{ patient.get_age() }} years</dd>
+                            <dt class="col-5 text-muted">Gender</dt>
+                            <dd class="col-7">{{ patient.gender }}</dd>
+                            <dt class="col-5 text-muted">Phone</dt>
+                            <dd class="col-7">{{ patient.phone }}</dd>
+                            <dt class="col-5 text-muted">Email</dt>
+                            <dd class="col-7">{{ patient.email or '—' }}</dd>
+                            <dt class="col-5 text-muted">Location</dt>
+                            <dd class="col-7">
+                                {% if patient.location %}
+                                <i class="fas fa-location-dot text-primary me-1"></i>{{ patient.location }}
+                                {% else %}—{% endif %}
+                            </dd>
+                        </dl>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Surgery Date:</strong> {{ patient.surgery_date.strftime('%B %d, %Y') }}</p>
-                        <p><strong>Days Post-Op:</strong> {{ patient.days_post_surgery() }} days</p>
-                        <p><strong>Surgery Type:</strong> {{ patient.surgery_type or 'N/A' }}</p>
-                        <p><strong>Surgeon:</strong> {{ patient.surgeon_name or 'N/A' }}</p>
-                        <p><strong>Incision Type:</strong> {{ patient.incision_type or 'N/A' }}</p>
+                        <dl class="row small mb-0">
+                            <dt class="col-5 text-muted">Surgery Date</dt>
+                            <dd class="col-7">{{ patient.surgery_date.strftime('%B %d, %Y') }}</dd>
+                            <dt class="col-5 text-muted">Days Post-Op</dt>
+                            <dd class="col-7">{{ patient.days_post_surgery() }} days</dd>
+                            <dt class="col-5 text-muted">Surgery Type</dt>
+                            <dd class="col-7">{{ patient.surgery_type or '—' }}</dd>
+                            <dt class="col-5 text-muted">Surgeon</dt>
+                            <dd class="col-7">{{ patient.surgeon_name or '—' }}</dd>
+                            <dt class="col-5 text-muted">Incision</dt>
+                            <dd class="col-7">{{ patient.incision_type or '—' }}</dd>
+                        </dl>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Follow-ups Section -->
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white d-flex justify-content-between">
-                <h5 class="mb-0">Follow-ups</h5>
-                <a href="{{ url_for('follow_ups.create_follow_up', patient_id=patient.id) }}" class="btn btn-sm btn-light">
-                    <i class="fas fa-plus"></i> Schedule New
+        <!-- Follow-ups -->
+        <div class="card mb-3" data-aos="fade-up" data-aos-delay="40">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-calendar-check me-2"></i> Follow-ups</span>
+                <a href="{{ url_for('follow_ups.create_follow_up', patient_id=patient.id) }}"
+                   class="btn btn-sm btn-light py-0 px-2">
+                    <i class="fas fa-plus me-1"></i> Schedule
                 </a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if follow_ups %}
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover">
+                    <table class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Type</th>
                                 <th>Location</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">View</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for follow_up in follow_ups %}
+                            {% for fu in follow_ups %}
                             <tr>
-                                <td>{{ follow_up.follow_up_date.strftime('%b %d, %Y %H:%M') }}</td>
-                                <td>{{ follow_up.follow_up_type }}</td>
-                                <td>{{ follow_up.visit_location or 'N/A' }}</td>
+                                <td class="small">{{ fu.follow_up_date.strftime('%b %d, %Y %H:%M') }}</td>
                                 <td>
-                                    {% if follow_up.is_completed %}
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                                        {{ fu.follow_up_type }}
+                                    </span>
+                                </td>
+                                <td class="small text-muted">{{ fu.visit_location or '—' }}</td>
+                                <td class="text-center">
+                                    {% if fu.is_completed %}
                                     <span class="badge bg-success">Completed</span>
                                     {% else %}
-                                    <span class="badge bg-warning">Pending</span>
+                                    <span class="badge bg-warning text-dark">Pending</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=follow_up.id) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                <td class="text-center">
+                                    <a href="{{ url_for('follow_ups.view_follow_up', follow_up_id=fu.id) }}"
+                                       class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -96,53 +131,53 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted">No follow-ups scheduled yet</p>
+                <div class="text-center py-4 text-muted small">No follow-ups scheduled yet.</div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Assessments Section -->
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white d-flex justify-content-between">
-                <h5 class="mb-0">Wound Assessments</h5>
-                <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-sm btn-light">
-                    <i class="fas fa-plus"></i> New Assessment
+        <!-- Wound Assessments -->
+        <div class="card mb-3" data-aos="fade-up" data-aos-delay="80">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clipboard-list me-2"></i> Wound Assessments</span>
+                <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}"
+                   class="btn btn-sm btn-light py-0 px-2">
+                    <i class="fas fa-plus me-1"></i> New
                 </a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if assessments %}
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover">
+                    <table class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Status</th>
-                                <th>Pain Level</th>
-                                <th>Infection Signs</th>
-                                <th>Action</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Pain</th>
+                                <th class="text-center">Infection</th>
+                                <th class="text-center">View</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for assessment in assessments %}
+                            {% for a in assessments %}
                             <tr>
-                                <td>{{ assessment.assessment_date.strftime('%b %d, %Y') }}</td>
-                                <td>
-                                    <span class="badge bg-{{ 'success' if assessment.status.value == 'excellent' else 'info' if assessment.status.value == 'good' else 'warning' if assessment.status.value == 'fair' else 'danger' }}">
-                                        {{ assessment.status.value.capitalize() }}
+                                <td class="small">{{ a.assessment_date.strftime('%b %d, %Y') }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ 'success' if a.status.value == 'excellent' else 'info' if a.status.value == 'good' else 'warning text-dark' if a.status.value == 'fair' else 'danger' }}">
+                                        {{ a.status.value.capitalize() }}
                                     </span>
                                 </td>
-                                <td>{{ assessment.pain_level }}/10</td>
-                                <td>
-                                    {% if assessment.infection_signs %}
+                                <td class="text-center small">{{ a.pain_level }}/10</td>
+                                <td class="text-center">
+                                    {% if a.infection_signs %}
                                     <span class="badge bg-danger">Yes</span>
                                     {% else %}
                                     <span class="badge bg-success">No</span>
                                     {% endif %}
                                 </td>
-                                <td>
-                                    <a href="{{ url_for('assessments.view_assessment', assessment_id=assessment.id) }}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                <td class="text-center">
+                                    <a href="{{ url_for('assessments.view_assessment', assessment_id=a.id) }}"
+                                       class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -150,20 +185,20 @@
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted">No assessments recorded yet</p>
+                <div class="text-center py-4 text-muted small">No assessments recorded yet.</div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Medications Section -->
-        <div class="card">
+        <!-- Medications -->
+        <div class="card" data-aos="fade-up" data-aos-delay="120">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Active Medications</h5>
+                <i class="fas fa-pills me-2"></i> Active Medications
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if medications %}
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover">
+                    <table class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Medication</th>
@@ -176,48 +211,83 @@
                         <tbody>
                             {% for med in medications %}
                             <tr>
-                                <td>{{ med.medication_name }}</td>
-                                <td>{{ med.dosage }}</td>
-                                <td>{{ med.frequency }}</td>
-                                <td>{{ med.route }}</td>
-                                <td>{{ med.indication }}</td>
+                                <td class="fw-medium">{{ med.medication_name }}</td>
+                                <td class="small">{{ med.dosage }}</td>
+                                <td class="small">{{ med.frequency }}</td>
+                                <td class="small">{{ med.route }}</td>
+                                <td class="small text-muted">{{ med.indication }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <p class="text-muted">No active medications</p>
+                <div class="text-center py-4 text-muted small">No active medications.</div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <!-- Status Card -->
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Status</h5>
+    <!-- Right: sidebar cards -->
+    <div class="col-lg-4">
+        <!-- Status -->
+        <div class="card mb-3" data-aos="fade-up">
+            <div class="card-header bg-{{ 'success' if patient.is_active else 'secondary' }} text-white">
+                <i class="fas fa-circle-dot me-2"></i> Patient Status
             </div>
-            <div class="card-body text-center">
+            <div class="card-body text-center py-4">
                 {% if patient.is_active %}
-                <span class="badge bg-success" style="font-size: 1.1rem; padding: 10px 20px;">ACTIVE</span>
+                <span class="badge bg-success px-4 py-2 fs-6">
+                    <i class="fas fa-circle me-1" style="font-size:.55rem;"></i> Active
+                </span>
                 {% else %}
-                <span class="badge bg-secondary" style="font-size: 1.1rem; padding: 10px 20px;">DISCHARGED</span>
+                <span class="badge bg-secondary px-4 py-2 fs-6">Discharged</span>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="card mb-3">
+        <!-- Statistics -->
+        <div class="card mb-3" data-aos="fade-up" data-aos-delay="40">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Statistics</h5>
+                <i class="fas fa-chart-bar me-2"></i> Statistics
             </div>
             <div class="card-body">
-                <p><strong>Total Follow-ups:</strong> {{ follow_ups|length }}</p>
-                <p><strong>Total Assessments:</strong> {{ assessments|length }}</p>
-                <p><strong>Active Medications:</strong> {{ medications|length }}</p>
-                <p><strong>Registered Since:</strong> {{ patient.created_at.strftime('%b %d, %Y') }}</p>
+                <ul class="list-unstyled small mb-0">
+                    <li class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="text-muted"><i class="fas fa-calendar-check me-2 text-primary"></i>Total Follow-ups</span>
+                        <strong>{{ follow_ups|length }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="text-muted"><i class="fas fa-clipboard-list me-2 text-primary"></i>Total Assessments</span>
+                        <strong>{{ assessments|length }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between py-1 border-bottom">
+                        <span class="text-muted"><i class="fas fa-pills me-2 text-primary"></i>Active Medications</span>
+                        <strong>{{ medications|length }}</strong>
+                    </li>
+                    <li class="d-flex justify-content-between py-1">
+                        <span class="text-muted"><i class="fas fa-calendar me-2 text-primary"></i>Registered Since</span>
+                        <strong>{{ patient.created_at.strftime('%b %d, %Y') }}</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="card" data-aos="fade-up" data-aos-delay="80">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-bolt me-2"></i> Quick Actions
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="{{ url_for('follow_ups.create_follow_up', patient_id=patient.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-calendar-plus me-1"></i> Schedule Follow-up
+                </a>
+                <a href="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-clipboard-list me-1"></i> New Assessment
+                </a>
+                <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-comments me-1"></i> Open Chat
+                </a>
             </div>
         </div>
     </div>

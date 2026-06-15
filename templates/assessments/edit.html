@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Create Wound Assessment - MubyeyiCare{% endblock %}
+{% block title %}Edit Wound Assessment - MubyeyiCare{% endblock %}
 
 {% block content %}
 <div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-clipboard-list"></i> Wound Assessment</h2>
-    <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back to Patient
+    <h2><i class="fas fa-clipboard-pen me-2"></i> Edit Wound Assessment</h2>
+    <a href="{{ url_for('assessments.view_assessment', assessment_id=assessment.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Assessment
     </a>
 </div>
 
@@ -16,9 +16,12 @@
             <div class="card-header bg-primary text-white">
                 <i class="fas fa-user me-2"></i> {{ patient.get_full_name() }}
                 <small class="text-white-50 ms-2">— {{ patient.mrn }}</small>
+                <span class="badge bg-white text-primary ms-2">
+                    {{ assessment.assessment_date.strftime('%b %d, %Y') }}
+                </span>
             </div>
             <div class="card-body p-4">
-                <form method="POST" action="{{ url_for('assessments.create_assessment', patient_id=patient.id) }}">
+                <form method="POST" action="{{ url_for('assessments.edit_assessment', assessment_id=assessment.id) }}">
 
                     <p class="section-title">Assessment Overview</p>
                     <div class="row">
@@ -26,11 +29,11 @@
                             <label for="status" class="form-label">Wound Status <span class="text-danger">*</span></label>
                             <select class="form-select" id="status" name="status" required>
                                 <option value="">— Select Status —</option>
-                                <option value="excellent">Excellent</option>
-                                <option value="good">Good</option>
-                                <option value="fair">Fair</option>
-                                <option value="poor">Poor</option>
-                                <option value="infected">Infected</option>
+                                {% for s in statuses %}
+                                <option value="{{ s.value }}" {{ 'selected' if assessment.status == s }}>
+                                    {{ s.value.capitalize() }}
+                                </option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -38,7 +41,7 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-face-grimace"></i></span>
                                 <input type="number" class="form-control" id="pain_level" name="pain_level"
-                                       min="0" max="10" placeholder="0" required>
+                                       min="0" max="10" value="{{ assessment.pain_level or 0 }}" required>
                                 <span class="input-group-text">/10</span>
                             </div>
                         </div>
@@ -48,7 +51,8 @@
                     <div class="row g-2 mb-3">
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="redness_present" name="redness_present">
+                                <input class="form-check-input" type="checkbox" id="redness_present" name="redness_present"
+                                       {{ 'checked' if assessment.redness_present }}>
                                 <label class="form-check-label" for="redness_present">
                                     <i class="fas fa-circle-dot text-danger me-1"></i> Redness
                                 </label>
@@ -56,7 +60,8 @@
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="swelling_present" name="swelling_present">
+                                <input class="form-check-input" type="checkbox" id="swelling_present" name="swelling_present"
+                                       {{ 'checked' if assessment.swelling_present }}>
                                 <label class="form-check-label" for="swelling_present">
                                     <i class="fas fa-circle-dot text-warning me-1"></i> Swelling
                                 </label>
@@ -64,7 +69,8 @@
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="discharge_present" name="discharge_present">
+                                <input class="form-check-input" type="checkbox" id="discharge_present" name="discharge_present"
+                                       {{ 'checked' if assessment.discharge_present }}>
                                 <label class="form-check-label" for="discharge_present">
                                     <i class="fas fa-droplet text-info me-1"></i> Discharge
                                 </label>
@@ -72,7 +78,8 @@
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="dehiscence_present" name="dehiscence_present">
+                                <input class="form-check-input" type="checkbox" id="dehiscence_present" name="dehiscence_present"
+                                       {{ 'checked' if assessment.dehiscence_present }}>
                                 <label class="form-check-label" for="dehiscence_present">
                                     <i class="fas fa-exclamation text-danger me-1"></i> Dehiscence
                                 </label>
@@ -80,7 +87,8 @@
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="infection_signs" name="infection_signs">
+                                <input class="form-check-input" type="checkbox" id="infection_signs" name="infection_signs"
+                                       {{ 'checked' if assessment.infection_signs }}>
                                 <label class="form-check-label" for="infection_signs">
                                     <i class="fas fa-biohazard text-danger me-1"></i> Infection Signs
                                 </label>
@@ -93,19 +101,22 @@
                         <div class="col-md-4 mb-3">
                             <label for="discharge_type" class="form-label">Discharge Type</label>
                             <input type="text" class="form-control" id="discharge_type" name="discharge_type"
+                                   value="{{ assessment.discharge_type or '' }}"
                                    placeholder="e.g., Serosanguinous">
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="incision_length" class="form-label">Incision Length (cm)</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="incision_length" name="incision_length" step="0.1" min="0">
+                                <input type="number" class="form-control" id="incision_length" name="incision_length"
+                                       step="0.1" min="0" value="{{ assessment.incision_length or '' }}">
                                 <span class="input-group-text">cm</span>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="wound_depth" class="form-label">Wound Depth (mm)</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="wound_depth" name="wound_depth" step="0.1" min="0">
+                                <input type="number" class="form-control" id="wound_depth" name="wound_depth"
+                                       step="0.1" min="0" value="{{ assessment.wound_depth or '' }}">
                                 <span class="input-group-text">mm</span>
                             </div>
                         </div>
@@ -115,23 +126,24 @@
                         <label for="healing_progress" class="form-label">Healing Progress</label>
                         <select class="form-select" id="healing_progress" name="healing_progress">
                             <option value="">— Select Progress —</option>
-                            <option value="On track">On Track</option>
-                            <option value="Slightly delayed">Slightly Delayed</option>
-                            <option value="Significantly delayed">Significantly Delayed</option>
+                            {% for opt in ['On track', 'Slightly delayed', 'Significantly delayed'] %}
+                            <option value="{{ opt }}" {{ 'selected' if assessment.healing_progress == opt }}>{{ opt }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label for="observations" class="form-label">Clinical Observations</label>
                         <textarea class="form-control" id="observations" name="observations" rows="4"
-                                  placeholder="Describe clinical findings…"></textarea>
+                                  placeholder="Describe clinical findings…">{{ assessment.observations or '' }}</textarea>
                     </div>
 
                     <p class="section-title">Treatment Recommendations</p>
                     <div class="row g-2 mb-3">
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="dressing_change_needed" name="dressing_change_needed">
+                                <input class="form-check-input" type="checkbox" id="dressing_change_needed" name="dressing_change_needed"
+                                       {{ 'checked' if assessment.dressing_change_needed }}>
                                 <label class="form-check-label" for="dressing_change_needed">
                                     <i class="fas fa-bandage text-warning me-1"></i> Dressing Change Needed
                                 </label>
@@ -139,7 +151,8 @@
                         </div>
                         <div class="col-6 col-md-4">
                             <div class="form-check p-3 border rounded-3 h-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="antibiotic_prescribed" name="antibiotic_prescribed">
+                                <input class="form-check-input" type="checkbox" id="antibiotic_prescribed" name="antibiotic_prescribed"
+                                       {{ 'checked' if assessment.antibiotic_prescribed }}>
                                 <label class="form-check-label" for="antibiotic_prescribed">
                                     <i class="fas fa-pills text-info me-1"></i> Antibiotic Prescribed
                                 </label>
@@ -148,6 +161,7 @@
                         <div class="col-md-4 mb-3 mt-2 mt-md-0">
                             <label for="dressing_type" class="form-label">Dressing Type</label>
                             <input type="text" class="form-control" id="dressing_type" name="dressing_type"
+                                   value="{{ assessment.dressing_type or '' }}"
                                    placeholder="e.g., Sterile Gauze">
                         </div>
                     </div>
@@ -157,17 +171,20 @@
                         <select class="form-select" id="follow_up_id" name="follow_up_id">
                             <option value="">— None —</option>
                             {% for fu in follow_ups %}
-                            <option value="{{ fu.id }}">{{ fu.follow_up_date.strftime('%b %d, %Y %H:%M') }} — {{ fu.follow_up_type }}</option>
+                            <option value="{{ fu.id }}" {{ 'selected' if assessment.follow_up_id == fu.id }}>
+                                {{ fu.follow_up_date.strftime('%b %d, %Y %H:%M') }} — {{ fu.follow_up_type }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <hr class="my-3">
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         <button type="submit" class="btn btn-primary px-4">
-                            <i class="fas fa-save me-1"></i> Save Assessment
+                            <i class="fas fa-save me-1"></i> Save Changes
                         </button>
-                        <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('assessments.view_assessment', assessment_id=assessment.id) }}"
+                           class="btn btn-outline-secondary">
                             <i class="fas fa-times me-1"></i> Cancel
                         </a>
                     </div>

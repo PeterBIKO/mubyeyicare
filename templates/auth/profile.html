@@ -1,81 +1,113 @@
 {% extends "base.html" %}
 
-{% block title %}User Profile - Post-Cesarean Wound Care System{% endblock %}
+{% block title %}My Profile - MubyeyiCare{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-user-circle"></i> My Profile</h4>
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-user-circle"></i> My Profile</h2>
+</div>
+
+<div class="row" data-aos="fade-up">
+    <!-- Profile card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body py-4">
+                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
+                     style="width:90px;height:90px;font-size:2rem;background:linear-gradient(135deg,#1e3a5f,#2c5282);">
+                    {{ user.first_name[0] | upper }}{{ user.last_name[0] | upper }}
+                </div>
+                <h5 class="fw-bold mb-1">{{ user.get_full_name() }}</h5>
+                <span class="badge bg-primary mb-3">{{ user.role.value.capitalize() }}</span>
+                <ul class="list-unstyled text-start small px-2">
+                    <li class="py-1 border-bottom">
+                        <i class="fas fa-at text-primary me-2"></i>{{ user.username }}
+                    </li>
+                    <li class="py-1 border-bottom">
+                        <i class="fas fa-envelope text-primary me-2"></i>{{ user.email }}
+                    </li>
+                    <li class="py-1 border-bottom">
+                        <i class="fas fa-phone text-primary me-2"></i>{{ user.phone or 'Not provided' }}
+                    </li>
+                    <li class="py-1">
+                        <i class="fas fa-calendar text-primary me-2"></i>
+                        Joined {{ user.created_at.strftime('%B %d, %Y') }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {% if user.role.value in ['patient', 'mother'] %}
+        <div class="card mt-0">
+            <div class="card-header bg-{{ 'success' if user.patient_profile else 'warning' }} text-white">
+                <i class="fas fa-link me-2"></i> Patient Record
             </div>
             <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-3 text-center">
-                        <i class="fas fa-user-circle" style="font-size: 80px; color: #2c3e50;"></i>
+                {% if user.patient_profile %}
+                    <div class="alert alert-success mb-2 py-2 px-3">
+                        <i class="fas fa-check-circle me-1"></i> Record linked
                     </div>
-                    <div class="col-md-9">
-                        <h5>{{ user.get_full_name() }}</h5>
-                        <p class="text-muted">
-                            <strong>Role:</strong> {{ user.role.value.capitalize() }}<br>
-                            <strong>Username:</strong> {{ user.username }}<br>
-                            <strong>Email:</strong> {{ user.email }}<br>
-                            <strong>Phone:</strong> {{ user.phone or 'Not provided' }}<br>
-                            <strong>Joined:</strong> {{ user.created_at.strftime('%B %d, %Y') }}
-                        </p>
+                    <p class="mb-1 small"><strong>Name:</strong> {{ user.patient_profile.get_full_name() }}</p>
+                    <p class="mb-0 small"><strong>MRN:</strong> {{ user.patient_profile.mrn }}</p>
+                {% else %}
+                    <div class="alert alert-warning mb-3 py-2 px-3 small">
+                        <i class="fas fa-triangle-exclamation me-1"></i>
+                        No patient record linked yet.
                     </div>
-                </div>
+                    <a href="{{ url_for('auth.link_patient') }}" class="btn btn-info btn-sm w-100">
+                        <i class="fas fa-link me-1"></i> Link Patient Record
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
 
-                <hr>
-
-                <h6>Update Profile</h6>
+    <!-- Edit form -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-pen-to-square me-2"></i> Update Profile
+            </div>
+            <div class="card-body p-4">
                 <form method="POST" action="{{ url_for('auth.update_profile') }}">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="first_name" name="first_name"
+                                       value="{{ user.first_name }}" required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+                            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="last_name" name="last_name"
+                                       value="{{ user.last_name }}" required>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Phone</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                    <div class="mb-4">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="tel" class="form-control" id="phone" name="phone"
+                                   value="{{ user.phone or '' }}" placeholder="+250 ...">
+                        </div>
                     </div>
 
+                    <hr class="my-3">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Update Profile
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-1"></i> Save Changes
                         </button>
-                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
                         </a>
                     </div>
                 </form>
-
-                {% if user.role.value in ['patient', 'mother'] %}
-                <hr>
-                <div class="mt-4">
-                    {% if user.patient_profile %}
-                        <div class="alert alert-success">
-                            <strong>Patient record linked:</strong> Yes<br>
-                            <strong>Patient name:</strong> {{ user.patient_profile.get_full_name() }}<br>
-                            <strong>MRN:</strong> {{ user.patient_profile.mrn }}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <strong>No patient record linked yet.</strong><br>
-                            Please link your account to an existing patient profile so you can access your chat and follow-up details.
-                        </div>
-                        <a href="{{ url_for('auth.link_patient') }}" class="btn btn-info">
-                            <i class="fas fa-link"></i> Link Patient Record
-                        </a>
-                    {% endif %}
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>

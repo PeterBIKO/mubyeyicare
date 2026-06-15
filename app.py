@@ -49,6 +49,8 @@ def create_app(config_name=None):
     with app.app_context():
         db.create_all()
         inspector = inspect(db.engine)
+
+        # message table: attachment columns
         if "message" in inspector.get_table_names():
             existing = {col["name"] for col in inspector.get_columns("message")}
             for name, col_type in [
@@ -59,10 +61,26 @@ def create_app(config_name=None):
                 if name not in existing:
                     with db.engine.connect() as conn:
                         conn.execute(text(f"ALTER TABLE message ADD COLUMN {name} {col_type}"))
+                        conn.commit()
+
+        # patient table: user_id + location
         if "patient" in inspector.get_table_names():
             existing_patient = {col["name"] for col in inspector.get_columns("patient")}
-            if "user_id" not in existing_patient:
+            for name, col_type in [
+                ("user_id", "INTEGER"),
+                ("location", "VARCHAR(200)")
+            ]:
+                if name not in existing_patient:
+                    with db.engine.connect() as conn:
+                        conn.execute(text(f"ALTER TABLE patient ADD COLUMN {name} {col_type}"))
+                        conn.commit()
+
+        # user table: location
+        if "user" in inspector.get_table_names():
+            existing_user = {col["name"] for col in inspector.get_columns("user")}
+            if "location" not in existing_user:
                 with db.engine.connect() as conn:
-                    conn.execute(text("ALTER TABLE patient ADD COLUMN user_id INTEGER"))
+                    conn.execute(text("ALTER TABLE user ADD COLUMN location VARCHAR(200)"))
+                    conn.commit()
     
     return app
