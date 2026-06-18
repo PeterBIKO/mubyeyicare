@@ -409,6 +409,68 @@
                         {{ current_user.role.value.capitalize() }}
                     </span>
                 </li>
+
+                <!-- ── Notification Bell ── -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link position-relative" href="#"
+                       id="bellDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false"
+                       title="Notifications">
+                        <i class="fas fa-bell fa-lg"></i>
+                        {% if unread_notifications > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size:.6rem;padding:.25em .45em;">
+                            {{ unread_notifications if unread_notifications < 100 else '99+' }}
+                        </span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:320px;max-height:420px;overflow-y:auto;">
+                        <li class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
+                            <span class="fw-semibold small">Notifications</span>
+                            {% if unread_notifications > 0 %}
+                            <form method="POST" action="{{ url_for('notifications.mark_all_read') }}" class="mb-0">
+                                <button type="submit" class="btn btn-link btn-sm p-0 text-primary text-decoration-none" style="font-size:.78rem;">
+                                    Mark all read
+                                </button>
+                            </form>
+                            {% endif %}
+                        </li>
+                        {# Load last 6 notifications via Jinja — full list at /notifications #}
+                        {% set recent_notifs = current_user.notifications | sort(attribute='created_at', reverse=True) | list %}
+                        {% if recent_notifs %}
+                            {% for n in recent_notifs[:6] %}
+                            <li>
+                                <a class="dropdown-item py-2 px-3 d-flex gap-2 align-items-start {{ '' if n.is_read else 'fw-semibold bg-light' }}"
+                                   href="{{ url_for('notifications.mark_read', notif_id=n.id, next=n.link or '') }}">
+                                    <span class="mt-1 flex-shrink-0" style="font-size:1rem;">
+                                        {{ '📅' if n.notif_type == 'appointment' else '⚠️' if n.notif_type == 'alert' else '🔔' if n.notif_type == 'reminder' else 'ℹ️' }}
+                                    </span>
+                                    <div style="font-size:.82rem;line-height:1.35;">
+                                        <div>{{ n.title }}</div>
+                                        <div class="text-muted fw-normal">{{ n.message | truncate(60) }}</div>
+                                        <div class="text-muted fw-normal" style="font-size:.72rem;">{{ n.created_at.strftime('%b %d, %H:%M') }}</div>
+                                    </div>
+                                    {% if not n.is_read %}
+                                    <span class="ms-auto mt-1 flex-shrink-0" style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li class="text-center py-1">
+                                <a href="{{ url_for('notifications.index') }}" class="small text-primary text-decoration-none">
+                                    View all notifications
+                                </a>
+                            </li>
+                        {% else %}
+                        <li class="text-center py-4 text-muted small">
+                            <i class="fas fa-bell-slash d-block mb-1 opacity-30 fa-lg"></i>
+                            No notifications yet
+                        </li>
+                        {% endif %}
+                    </ul>
+                </li>
+
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#"
                        id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -447,6 +509,10 @@
         {# ── PATIENT sidebar ── #}
         <span class="sidebar-section">My Care</span>
         <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fas fa-house-medical"></i> My Dashboard</a>
+        <a class="nav-link" href="{{ url_for('notifications.index') }}">
+            <i class="fas fa-bell"></i> Notifications
+            {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
+        </a>
         <span class="sidebar-section">Alerts &amp; Appointments</span>
         <a class="nav-link" href="{{ url_for('appointments.my_appointments') }}"><i class="fas fa-calendar-check"></i> My Appointments</a>
         <a class="nav-link" href="{{ url_for('appointments.request_appointment') }}"><i class="fas fa-calendar-plus"></i> Request Appointment</a>
@@ -460,6 +526,10 @@
         {# ── ADMIN sidebar ── #}
         <span class="sidebar-section">Admin</span>
         <a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-halved"></i> Admin Dashboard</a>
+        <a class="nav-link" href="{{ url_for('notifications.index') }}">
+            <i class="fas fa-bell"></i> Notifications
+            {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
+        </a>
         <span class="sidebar-section">User Management</span>
         <a class="nav-link" href="{{ url_for('admin.users') }}"><i class="fas fa-users-gear"></i> All Users</a>
         <a class="nav-link" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Register User</a>
@@ -480,6 +550,10 @@
         {# ── HCP (Doctor / Nurse / CHW) sidebar ── #}
         <span class="sidebar-section">Main</span>
         <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a class="nav-link" href="{{ url_for('notifications.index') }}">
+            <i class="fas fa-bell"></i> Notifications
+            {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
+        </a>
         <span class="sidebar-section">Patients</span>
         <a class="nav-link" href="{{ url_for('patients.list_patients') }}"><i class="fas fa-users"></i> Patient Records</a>
         <a class="nav-link" href="{{ url_for('appointments.list_all') }}"><i class="fas fa-calendar-check"></i> Appointments</a>
@@ -509,6 +583,10 @@
             {# ── PATIENT sidebar ── #}
             <span class="sidebar-section">My Care</span>
             <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-house-medical"></i> My Dashboard</a>
+            <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
+                <i class="fas fa-bell"></i> Notifications
+                {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
+            </a>
             <span class="sidebar-section">Alerts &amp; Appointments</span>
             <a class="nav-link" href="{{ url_for('appointments.my_appointments') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-check"></i> My Appointments</a>
             <a class="nav-link" href="{{ url_for('appointments.request_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> Request Appointment</a>
@@ -522,6 +600,10 @@
             {# ── ADMIN sidebar ── #}
             <span class="sidebar-section">Admin</span>
             <a class="nav-link" href="{{ url_for('admin.dashboard') }}" data-bs-dismiss="offcanvas"><i class="fas fa-shield-halved"></i> Admin Dashboard</a>
+            <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
+                <i class="fas fa-bell"></i> Notifications
+                {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
+            </a>
             <span class="sidebar-section">User Management</span>
             <a class="nav-link" href="{{ url_for('admin.users') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users-gear"></i> All Users</a>
             <a class="nav-link" href="{{ url_for('auth.register') }}" data-bs-dismiss="offcanvas"><i class="fas fa-user-plus"></i> Register User</a>
@@ -542,6 +624,10 @@
             {# ── HCP sidebar ── #}
             <span class="sidebar-section">Main</span>
             <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
+                <i class="fas fa-bell"></i> Notifications
+                {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
+            </a>
             <span class="sidebar-section">Patients</span>
             <a class="nav-link" href="{{ url_for('patients.list_patients') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users"></i> Patient Records</a>
             <a class="nav-link" href="{{ url_for('appointments.list_all') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-check"></i> Appointments</a>

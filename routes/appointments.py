@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from models import db, Patient, AppointmentRequest, AppointmentStatus, UserRole, User
+from routes.notifications import push_notification, push_to_all_admins
 from datetime import datetime
 
 appointments_bp = Blueprint('appointments', __name__, url_prefix='/appointments')
@@ -49,6 +50,16 @@ def request_appointment():
             status=AppointmentStatus.PENDING
         )
         db.session.add(appt)
+
+        # Notify all admins of the new request
+        push_to_all_admins(
+            title='New Appointment Request',
+            message=f'{patient.get_full_name()} has requested an appointment on '
+                    f'{preferred_dt.strftime("%b %d, %Y at %H:%M")}.'
+                    + (f' Reason: {reason[:80]}' if reason else ''),
+            notif_type='appointment',
+            link=url_for('admin.appointments')
+        )
         db.session.commit()
         flash('Appointment request submitted. You will be notified once it is reviewed.', 'success')
         return redirect(url_for('appointments.my_appointments'))

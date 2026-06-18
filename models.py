@@ -362,6 +362,23 @@ class EducationContent(db.Model):
 
 # ── Broadcast Messages ────────────────────────────────────────────────────────
 
+class Notification(db.Model):
+    """In-app notifications for appointment events, alerts, and reminders."""
+    id          = db.Column(db.Integer, primary_key=True)
+    user_id     = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title       = db.Column(db.String(200), nullable=False)
+    message     = db.Column(db.Text, nullable=False)
+    notif_type  = db.Column(db.String(30), default='info')   # appointment | alert | reminder | info
+    link        = db.Column(db.String(255))                  # URL to navigate to on click
+    is_read     = db.Column(db.Boolean, default=False)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    recipient = db.relationship('User', backref='notifications', foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f'<Notification user:{self.user_id} type:{self.notif_type} read:{self.is_read}>'
+
+
 class BroadcastMessage(db.Model):
     """Admin broadcast — targets: 'all', 'patients', 'hcps', or 'user:<id>'."""
     id         = db.Column(db.Integer, primary_key=True)

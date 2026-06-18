@@ -7,6 +7,7 @@ from models import (db, User, UserRole, Patient, Message, Alert,
                     EducationContent, EducationStatus,
                     BroadcastMessage, FollowUp, WoundAssessment)
 from routes.auth import admin_required
+from routes.notifications import push_notification
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -266,6 +267,53 @@ def appointment_action(appt_id):
         appt.assigned_hcp_id = hcp_id
     appt.admin_notes = notes
     appt.updated_at  = datetime.utcnow()
+
+    # Notify the patient's linked user account
+    patient = appt.patient
+    if patient and patient.user_id:
+        if action == 'approve':
+            date_str = appt.scheduled_date.strftime('%B %d, %Y at %H:%M') if appt.scheduled_date else appt.preferred_date.strftime('%B %d, %Y at %H:%M')
+            title   = '✅ Appointment Approved'
+            message = f'Your appointment request has been approved for {date_str}.'
+            if hcp_id:
+                hcp = User.query.get(hcp_id)
+                if hcp:
+                    message += f' Your provider: {hcp.get_full_name()}.'
+            if notes:
+                message += f' Note: {notes}'
+            notif_type = 'appointment'
+        elif action == 'reject':
+            title   = '❌ Appointment Rejected'
+            message = 'Your appointment request has been rejected.'
+            if notes:
+                message += f' Reason: {notes}'
+            notif_type = 'reminder'
+        else:  # reschedule
+            date_str = appt.scheduled_date.strftime('%B %d, %Y at %H:%M') if appt.scheduled_date else '(date TBD)'
+            title   = '🔄 Appointment Rescheduled'
+            message = f'Your appointment has been rescheduled to {date_str}.'
+            if notes:
+                message += f' Note: {notes}'
+            notif_type = 'appointment'
+        push_notification(
+            user_id=patient.user_id,
+            title=title,
+            message=message,
+            notif_type=notif_type,
+            link=url_for('appointments.my_appointments')
+        )
+
+    # Also notify assigned HCP
+    if hcp_id and action in ('approve', 'reschedule'):
+        date_str = (appt.scheduled_date or appt.preferred_date).strftime('%B %d, %Y at %H:%M')
+        push_notification(
+            user_id=hcp_id,
+            title='📅 New Appointment Assigned',
+            message=f'You have been assigned to {patient.get_full_name()}\'s appointment on {date_str}.',
+            notif_type='appointment',
+            link=url_for('appointments.list_all')
+        )
+
     db.session.commit()
     flash(f'Appointment {action}d.', 'success')
     return redirect(url_for('admin.appointments'))
@@ -279,6 +327,15 @@ def assign_alert_hcp(alert_id):
     hcp_id = request.form.get('hcp_id', type=int)
     if hcp_id:
         alert.assigned_hcp_id = hcp_id
+        # Notify assigned HCP
+        push_notification(
+            user_id=hcp_id,
+            title='⚠️ Alert Assigned to You',
+            message=f'You have been assigned to a {alert.severity} alert for patient '
+                    f'{alert.patient.get_full_name()}: {alert.alert_type}. {alert.message[:100]}',
+            notif_type='alert',
+            link=url_for('patients.view_patient', patient_id=alert.patient_id)
+        )
         db.session.commit()
         flash('HCP assigned to alert.', 'success')
     return redirect(request.referrer or url_for('admin.dashboard'))

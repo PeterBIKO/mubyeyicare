@@ -36,6 +36,7 @@ def create_app(config_name=None):
     from routes.admin import admin_bp
     from routes.appointments import appointments_bp
     from routes.wall import wall_bp
+    from routes.notifications import notifications_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -46,10 +47,23 @@ def create_app(config_name=None):
     app.register_blueprint(admin_bp)
     app.register_blueprint(appointments_bp)
     app.register_blueprint(wall_bp)
+    app.register_blueprint(notifications_bp)
 
     @app.route('/')
     def home():
         return redirect(url_for('dashboard.index'))
+
+    # Inject unread notification count into every template
+    @app.context_processor
+    def inject_notifications():
+        from flask_login import current_user
+        from models import Notification
+        if current_user.is_authenticated:
+            unread = Notification.query.filter_by(
+                user_id=current_user.id, is_read=False).count()
+        else:
+            unread = 0
+        return {'unread_notifications': unread}
     
     # Create database tables and apply schema upgrades
     with app.app_context():
@@ -96,5 +110,7 @@ def create_app(config_name=None):
                 with db.engine.connect() as conn:
                     conn.execute(text("ALTER TABLE alert ADD COLUMN assigned_hcp_id INTEGER REFERENCES user(id)"))
                     conn.commit()
+
+        # notification table is created by db.create_all() above; no manual migration needed
     
     return app
