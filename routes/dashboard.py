@@ -44,9 +44,12 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 @dashboard_bp.route('/')
 @login_required
 def index():
-    """Main dashboard"""
+    """Main dashboard — route to the correct view based on role."""
     if current_user.role in [UserRole.PATIENT, UserRole.MOTHER]:
         return redirect(url_for('dashboard.patient_dashboard'))
+    elif current_user.role in [UserRole.ADMIN, UserRole.NURSE]:
+        # Nurses have admin-level access; send them to the nurse/admin panel
+        return redirect(url_for('admin.dashboard'))
     else:
         return redirect(url_for('dashboard.provider_dashboard'))
 
@@ -58,7 +61,8 @@ def provider_dashboard():
         return redirect(url_for('dashboard.patient_dashboard'))
     
     # Get statistics
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role in [UserRole.ADMIN, UserRole.NURSE]:
+        # Admin and Nurse both see system-wide stats
         total_patients = Patient.query.count()
         discharged_patients = Patient.query.filter_by(is_active=False).count()
         active_follow_ups = FollowUp.query.filter_by(is_completed=False).count()
@@ -90,7 +94,7 @@ def provider_dashboard():
     alerts = Alert.query.filter_by(is_resolved=False).order_by(Alert.created_at.desc()).limit(10).all()
     
     # Get recent follow-ups
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role in [UserRole.ADMIN, UserRole.NURSE]:
         recent_follow_ups = FollowUp.query.order_by(FollowUp.follow_up_date.desc()).limit(5).all()
     else:
         recent_follow_ups = FollowUp.query.filter_by(created_by_id=current_user.id).order_by(FollowUp.follow_up_date.desc()).limit(5).all()
@@ -172,6 +176,7 @@ def analytics():
         return redirect(url_for('dashboard.patient_dashboard'))
 
     # Wound healing analytics
+
     assessments = WoundAssessment.query.all()
     
     # Calculate statistics
