@@ -4,9 +4,22 @@
 {% block content %}
 <div class="page-header" data-aos="fade-down">
     <h2><i class="fas fa-shield-halved me-2 text-primary"></i> Admin Dashboard</h2>
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('admin.broadcast') }}" class="btn btn-warning btn-sm"><i class="fas fa-bullhorn me-1"></i> Broadcast</a>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-1"></i> New User</a>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin.create_appointment') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-calendar-plus me-1"></i> New Appointment
+        </a>
+        <a href="{{ url_for('admin.create_alert') }}" class="btn btn-warning btn-sm text-dark">
+            <i class="fas fa-triangle-exclamation me-1"></i> New Alert
+        </a>
+        <a href="{{ url_for('admin.create_notification') }}" class="btn btn-info btn-sm text-white">
+            <i class="fas fa-bell me-1"></i> Send Notification
+        </a>
+        <a href="{{ url_for('admin.broadcast') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-bullhorn me-1"></i> Broadcast
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-user-plus me-1"></i> New User
+        </a>
     </div>
 </div>
 

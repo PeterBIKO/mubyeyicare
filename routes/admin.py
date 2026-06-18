@@ -319,6 +319,177 @@ def appointment_action(appt_id):
     return redirect(url_for('admin.appointments'))
 
 
+@admin_bp.route('/appointments/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_appointment():
+    patients = Patient.query.order_by(Patient.last_name).all()
+    hcps     = User.query.filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW])).order_by(User.last_name).all()
+
+    if request.method == 'POST':
+        patient_id       = request.form.get('patient_id', type=int)
+        preferred_date   = request.form.get('preferred_date', '').strip()
+        scheduled_date   = request.form.get('scheduled_date', '').strip()
+        reason           = request.form.get('reason', '').strip()
+        hcp_id           = request.form.get('hcp_id', type=int)
+        admin_notes      = request.form.get('admin_notes', '').strip()
+        status_val       = request.form.get('status', 'approved')
+
+        if not patient_id or not preferred_date:
+            flash('Patient and preferred date are required.', 'danger')
+            return render_template('admin/create_appointment.html', patients=patients, hcps=hcps, statuses=AppointmentStatus)
+
+        try:
+            pref_dt  = datetime.strptime(preferred_date, '%Y-%m-%dT%H:%M')
+            sched_dt = datetime.strptime(scheduled_date, '%Y-%m-%dT%H:%M') if scheduled_date else None
+        except ValueError:
+            flash('Invalid date format.', 'danger')
+            return render_template('admin/create_appointment.html', patients=patients, hcps=hcps, statuses=AppointmentStatus)
+
+        try:
+            status_enum = AppointmentStatus(status_val)
+        except ValueError:
+            status_enum = AppointmentStatus.APPROVED
+
+        appt = AppointmentRequest(
+            patient_id      = patient_id,
+            requested_by_id = current_user.id,
+            preferred_date  = pref_dt,
+            scheduled_date  = sched_dt,
+            reason          = reason,
+            status          = status_enum,
+            assigned_hcp_id = hcp_id or None,
+            admin_notes     = admin_notes,
+        )
+        db.session.add(appt)
+
+        # Notify patient
+        patient = Patient.query.get(patient_id)
+        if patient and patient.user_id:
+            date_label = (sched_dt or pref_dt).strftime('%B %d, %Y at %H:%M')
+            msg = f'An appointment has been scheduled for you on {date_label}.'
+            if hcp_id:
+                hcp = User.query.get(hcp_id)
+                if hcp:
+                    msg += f' Provider: {hcp.get_full_name()}.'
+            if admin_notes:
+                msg += f' Note: {admin_notes}'
+            push_notification(patient.user_id, '📅 Appointment Scheduled', msg,
+                              notif_type='appointment',
+                              link=url_for('appointments.my_appointments'))
+
+        # Notify assigned HCP
+        if hcp_id and patient:
+            date_label = (sched_dt or pref_dt).strftime('%B %d, %Y at %H:%M')
+            push_notification(hcp_id, '📅 New Appointment Assigned',
+                              f'You are assigned to {patient.get_full_name()}\'s appointment on {date_label}.',
+                              notif_type='appointment',
+                              link=url_for('appointments.list_all'))
+
+        db.session.commit()
+        flash('Appointment created successfully.', 'success')
+        return redirect(url_for('admin.appointments'))
+
+    return render_template('admin/create_appointment.html', patients=patients, hcps=hcps, statuses=AppointmentStatus)
+
+
+@admin_bp.route('/alerts/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_alert():
+    patients = Patient.query.order_by(Patient.last_name).all()
+    hcps     = User.query.filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW])).order_by(User.last_name).all()
+
+    if request.method == 'POST':
+        patient_id = request.form.get('patient_id', type=int)
+        alert_type = request.form.get('alert_type', '').strip()
+        severity   = request.form.get('severity', 'medium').strip()
+        message    = request.form.get('message', '').strip()
+        hcp_id     = request.form.get('hcp_id', type=int)
+
+        if not patient_id or not alert_type or not message:
+            flash('Patient, alert type, and message are required.', 'danger')
+            return render_template('admin/create_alert.html', patients=patients, hcps=hcps)
+
+        alert = Alert(
+            patient_id      = patient_id,
+            alert_type      = alert_type,
+            severity        = severity,
+            message         = message,
+            assigned_hcp_id = hcp_id or None,
+        )
+        db.session.add(alert)
+
+        patient = Patient.query.get(patient_id)
+        # Notify patient's user account
+        if patient and patient.user_id:
+            push_notification(patient.user_id,
+                              f'⚠️ {severity.capitalize()} Alert: {alert_type}',
+                              message[:200],
+                              notif_type='alert',
+                              link=url_for('dashboard.index'))
+
+        # Notify assigned HCP
+        if hcp_id and patient:
+            push_notification(hcp_id,
+                              f'⚠️ Alert Assigned — {severity.capitalize()}',
+                              f'{patient.get_full_name()}: {alert_type}. {message[:120]}',
+                              notif_type='alert',
+                              link=url_for('patients.view_patient', patient_id=patient_id))
+
+        db.session.commit()
+        flash('Alert created and notifications sent.', 'success')
+        return redirect(url_for('admin.dashboard'))
+
+    return render_template('admin/create_alert.html', patients=patients, hcps=hcps)
+
+
+@admin_bp.route('/notifications/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_notification():
+    users = User.query.filter_by(is_active=True).order_by(User.last_name).all()
+
+    if request.method == 'POST':
+        target      = request.form.get('target', 'user')   # user | all_patients | all_hcps | all
+        user_id     = request.form.get('user_id', type=int)
+        title       = request.form.get('title', '').strip()
+        message     = request.form.get('message', '').strip()
+        notif_type  = request.form.get('notif_type', 'info')
+        link        = request.form.get('link', '').strip() or None
+
+        if not title or not message:
+            flash('Title and message are required.', 'danger')
+            return render_template('admin/create_notification.html', users=users)
+
+        recipients = []
+        if target == 'user' and user_id:
+            u = User.query.get(user_id)
+            if u:
+                recipients = [u]
+        elif target == 'all_patients':
+            recipients = User.query.filter_by(is_active=True).filter(
+                User.role.in_([UserRole.PATIENT, UserRole.MOTHER])).all()
+        elif target == 'all_hcps':
+            recipients = User.query.filter_by(is_active=True).filter(
+                User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW])).all()
+        elif target == 'all':
+            recipients = User.query.filter_by(is_active=True).all()
+
+        if not recipients:
+            flash('No recipients found for the selected target.', 'warning')
+            return render_template('admin/create_notification.html', users=users)
+
+        for u in recipients:
+            push_notification(u.id, title, message, notif_type=notif_type, link=link or None)
+
+        db.session.commit()
+        flash(f'Notification sent to {len(recipients)} recipient(s).', 'success')
+        return redirect(url_for('admin.dashboard'))
+
+    return render_template('admin/create_notification.html', users=users)
+
+
 @admin_bp.route('/alerts/<int:alert_id>/assign-hcp', methods=['POST'])
 @login_required
 @admin_required

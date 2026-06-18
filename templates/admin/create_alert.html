@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Create Alert – MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+.severity-badge { display:inline-block; padding:.25em .7em; border-radius:.4rem; font-size:.8rem; font-weight:600; }
+.sev-low      { background:#dcfce7; color:#166534; }
+.sev-medium   { background:#fef9c3; color:#854d0e; }
+.sev-high     { background:#ffedd5; color:#9a3412; }
+.sev-critical { background:#fee2e2; color:#991b1b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-triangle-exclamation me-2 text-warning"></i> Create Alert</h2>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+<div class="col-12 col-lg-8">
+<div class="card" data-aos="fade-up">
+    <div class="card-header">
+        <i class="fas fa-bell me-2 text-warning"></i> Alert Details
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <!-- Patient -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Patient <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user-injured"></i></span>
+                    <select name="patient_id" class="form-select" required>
+                        <option value="">— Select patient —</option>
+                        {% for p in patients %}
+                        <option value="{{ p.id }}">{{ p.get_full_name() }} (MRN: {{ p.mrn }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <!-- Alert Type -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Alert Type <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                        <input type="text" name="alert_type" class="form-control" required
+                               list="alertTypes" placeholder="e.g. Wound Infection, High Fever…">
+                        <datalist id="alertTypes">
+                            <option value="Wound Infection">
+                            <option value="Wound Dehiscence">
+                            <option value="High Fever">
+                            <option value="Abnormal Vital Signs">
+                            <option value="Severe Pain">
+                            <option value="Missed Follow-Up">
+                            <option value="Medication Non-Compliance">
+                            <option value="Emergency">
+                        </datalist>
+                    </div>
+                </div>
+                <!-- Severity -->
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Severity <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-gauge-high"></i></span>
+                        <select name="severity" class="form-select" required id="severitySelect">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="mt-2">
+                        <span id="sevPreview" class="severity-badge sev-medium">Medium</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Alert Message <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-comment-medical"></i></span>
+                    <textarea name="message" class="form-control" rows="3" required
+                              placeholder="Describe the alert in detail…"></textarea>
+                </div>
+            </div>
+
+            <!-- Assign HCP -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Assign HCP <small class="text-muted fw-normal">(optional)</small></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user-doctor"></i></span>
+                    <select name="hcp_id" class="form-select">
+                        <option value="">— Unassigned —</option>
+                        {% for h in hcps %}
+                        <option value="{{ h.id }}">{{ h.get_full_name() }} ({{ h.role.value }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-text">The HCP will receive a notification about this alert.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-warning text-dark">
+                    <i class="fas fa-triangle-exclamation me-1"></i> Create Alert
+                </button>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sevColors = { low:'sev-low', medium:'sev-medium', high:'sev-high', critical:'sev-critical' };
+const sel = document.getElementById('severitySelect');
+const prev = document.getElementById('sevPreview');
+sel.addEventListener('change', () => {
+    prev.className = 'severity-badge ' + (sevColors[sel.value] || 'sev-medium');
+    prev.textContent = sel.options[sel.selectedIndex].text;
+});
+</script>
+{% endblock %}

@@ -538,8 +538,11 @@
         <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}"><i class="fas fa-eye"></i> Chat Monitor</a>
         <a class="nav-link" href="{{ url_for('admin.broadcast') }}"><i class="fas fa-bullhorn"></i> Broadcast</a>
         <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-        <span class="sidebar-section">Appointments</span>
+        <span class="sidebar-section">Appointments &amp; Alerts</span>
         <a class="nav-link" href="{{ url_for('admin.appointments') }}"><i class="fas fa-calendar-days"></i> Appointments</a>
+        <a class="nav-link" href="{{ url_for('admin.create_appointment') }}"><i class="fas fa-calendar-plus"></i> New Appointment</a>
+        <a class="nav-link" href="{{ url_for('admin.create_alert') }}"><i class="fas fa-triangle-exclamation"></i> New Alert</a>
+        <a class="nav-link" href="{{ url_for('admin.create_notification') }}"><i class="fas fa-paper-plane"></i> Send Notification</a>
         <span class="sidebar-section">Content</span>
         <a class="nav-link" href="{{ url_for('admin.education') }}"><i class="fas fa-graduation-cap"></i> Education Content</a>
         <span class="sidebar-section">Reports</span>
@@ -612,8 +615,11 @@
             <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}" data-bs-dismiss="offcanvas"><i class="fas fa-eye"></i> Chat Monitor</a>
             <a class="nav-link" href="{{ url_for('admin.broadcast') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bullhorn"></i> Broadcast</a>
             <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-            <span class="sidebar-section">Appointments</span>
+            <span class="sidebar-section">Appointments &amp; Alerts</span>
             <a class="nav-link" href="{{ url_for('admin.appointments') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-days"></i> Appointments</a>
+            <a class="nav-link" href="{{ url_for('admin.create_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> New Appointment</a>
+            <a class="nav-link" href="{{ url_for('admin.create_alert') }}" data-bs-dismiss="offcanvas"><i class="fas fa-triangle-exclamation"></i> New Alert</a>
+            <a class="nav-link" href="{{ url_for('admin.create_notification') }}" data-bs-dismiss="offcanvas"><i class="fas fa-paper-plane"></i> Send Notification</a>
             <span class="sidebar-section">Content</span>
             <a class="nav-link" href="{{ url_for('admin.education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Content</a>
             <span class="sidebar-section">Reports</span>

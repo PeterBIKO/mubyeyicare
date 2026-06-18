@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Send Notification – MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-bell me-2 text-primary"></i> Send Notification</h2>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
+</div>
+
+<div class="row justify-content-center">
+<div class="col-12 col-lg-8">
+<div class="card" data-aos="fade-up">
+    <div class="card-header">
+        <i class="fas fa-paper-plane me-2 text-primary"></i> Notification Details
+    </div>
+    <div class="card-body">
+        <form method="POST">
+
+            <!-- Target audience -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Send To <span class="text-danger">*</span></label>
+                <div class="d-flex flex-wrap gap-2" id="targetBtns">
+                    {% for val, label, icon in [
+                        ('user',        'Specific User',  'fa-user'),
+                        ('all_patients','All Patients',   'fa-user-injured'),
+                        ('all_hcps',    'All HCPs',       'fa-user-doctor'),
+                        ('all',         'Everyone',       'fa-users')
+                    ] %}
+                    <label class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 target-opt"
+                           style="cursor:pointer;">
+                        <input type="radio" name="target" value="{{ val }}" class="d-none"
+                               {{ 'checked' if val == 'user' }}>
+                        <i class="fas {{ icon }}"></i> {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Specific user (shown only when target=user) -->
+            <div class="mb-3" id="userRow">
+                <label class="form-label fw-semibold">Recipient <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <select name="user_id" class="form-select" id="userSelect">
+                        <option value="">— Select user —</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.get_full_name() }} ({{ u.role.value }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Type -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Notification Type</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                    <select name="notif_type" class="form-select">
+                        <option value="info" selected>ℹ️ Info</option>
+                        <option value="appointment">📅 Appointment</option>
+                        <option value="alert">⚠️ Alert</option>
+                        <option value="reminder">🔔 Reminder</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                    <input type="text" name="title" class="form-control" required
+                           maxlength="200" placeholder="Short, clear title…">
+                </div>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-comment-dots"></i></span>
+                    <textarea name="message" class="form-control" rows="3" required
+                              placeholder="Full notification message…"></textarea>
+                </div>
+            </div>
+
+            <!-- Link (optional) -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    Action Link <small class="text-muted fw-normal">(optional)</small>
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-link"></i></span>
+                    <input type="text" name="link" class="form-control"
+                           placeholder="e.g. /appointments/my  (leave blank for no link)">
+                </div>
+                <div class="form-text">Clicking the notification will open this URL.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-1"></i> Send Notification
+                </button>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Highlight selected target button
+const radios = document.querySelectorAll('input[name="target"]');
+const userRow = document.getElementById('userRow');
+const userSel = document.getElementById('userSelect');
+
+function syncTarget() {
+    document.querySelectorAll('.target-opt').forEach(btn => {
+        const inp = btn.querySelector('input');
+        btn.classList.toggle('btn-primary', inp.checked);
+        btn.classList.toggle('btn-outline-primary', !inp.checked);
+    });
+    const selected = document.querySelector('input[name="target"]:checked');
+    const showUser = selected && selected.value === 'user';
+    userRow.style.display = showUser ? '' : 'none';
+    userSel.required = showUser;
+}
+
+radios.forEach(r => r.addEventListener('change', syncTarget));
+// Clicking the label toggles the radio
+document.querySelectorAll('.target-opt').forEach(lbl => {
+    lbl.addEventListener('click', () => setTimeout(syncTarget, 0));
+});
+syncTarget();
+</script>
+{% endblock %}
