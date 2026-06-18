@@ -555,17 +555,19 @@
         <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> {{ tr('My Bookmarks') }}</a>
         <a class="nav-link" href="{{ url_for('dashboard.health_education') }}"><i class="fas fa-book-medical"></i> {{ tr('Wound Care Guide') }}</a>
 
-        {% elif current_user.role.value == 'admin' %}
-        {# ── ADMIN sidebar ── #}
-        <span class="sidebar-section">{{ tr('Admin') }}</span>
+        {% elif current_user.role.value in ['admin', 'nurse'] %}
+        {# ── ADMIN / NURSE elevated sidebar ── #}
+        <span class="sidebar-section">{{ tr('Admin') if current_user.role.value == 'admin' else 'Nurse Panel' }}</span>
         <a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-halved"></i> {{ tr('Admin Dashboard') }}</a>
         <a class="nav-link" href="{{ url_for('notifications.index') }}">
             <i class="fas fa-bell"></i> {{ tr('Notifications') }}
             {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
         </a>
+        {% if current_user.role.value == 'admin' %}
         <span class="sidebar-section">{{ tr('User Management') }}</span>
         <a class="nav-link" href="{{ url_for('admin.users') }}"><i class="fas fa-users-gear"></i> {{ tr('All Users') }}</a>
         <a class="nav-link" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> {{ tr('Register User') }}</a>
+        {% endif %}
         <a class="nav-link" href="{{ url_for('admin.patients') }}"><i class="fas fa-bed-pulse"></i> {{ tr('All Patients') }}</a>
         <span class="sidebar-section">{{ tr('Monitoring') }}</span>
         <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}"><i class="fas fa-eye"></i> {{ tr('Chat Monitor') }}</a>
@@ -638,17 +640,19 @@
             <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> {{ tr('My Bookmarks') }}</a>
             <a class="nav-link" href="{{ url_for('dashboard.health_education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-book-medical"></i> {{ tr('Wound Care Guide') }}</a>
 
-            {% elif current_user.role.value == 'admin' %}
-            {# ── ADMIN sidebar ── #}
-            <span class="sidebar-section">{{ tr('Admin') }}</span>
+            {% elif current_user.role.value in ['admin', 'nurse'] %}
+            {# ── ADMIN / NURSE elevated sidebar ── #}
+            <span class="sidebar-section">{{ tr('Admin') if current_user.role.value == 'admin' else 'Nurse Panel' }}</span>
             <a class="nav-link" href="{{ url_for('admin.dashboard') }}" data-bs-dismiss="offcanvas"><i class="fas fa-shield-halved"></i> {{ tr('Admin Dashboard') }}</a>
             <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
                 <i class="fas fa-bell"></i> {{ tr('Notifications') }}
                 {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
             </a>
+            {% if current_user.role.value == 'admin' %}
             <span class="sidebar-section">{{ tr('User Management') }}</span>
             <a class="nav-link" href="{{ url_for('admin.users') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users-gear"></i> {{ tr('All Users') }}</a>
             <a class="nav-link" href="{{ url_for('auth.register') }}" data-bs-dismiss="offcanvas"><i class="fas fa-user-plus"></i> {{ tr('Register User') }}</a>
+            {% endif %}
             <a class="nav-link" href="{{ url_for('admin.patients') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bed-pulse"></i> {{ tr('All Patients') }}</a>
             <span class="sidebar-section">{{ tr('Monitoring') }}</span>
             <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}" data-bs-dismiss="offcanvas"><i class="fas fa-eye"></i> {{ tr('Chat Monitor') }}</a>

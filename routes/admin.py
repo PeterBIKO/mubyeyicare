@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+﻿from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash
@@ -7,18 +7,18 @@ from models import (db, User, UserRole, Patient, Message, Alert,
                     EducationContent, EducationStatus,
                     BroadcastMessage, FollowUp, WoundAssessment)
 import math
-from routes.auth import admin_required
+from routes.auth import admin_required, nurse_admin_required
 from routes.notifications import push_notification
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
-# ── Dashboard ─────────────────────────────────────────────────────────────────
+# â”€â”€ Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/')
 @login_required
-@admin_required
+@nurse_admin_required
 def dashboard():
     stats = {
         'total_patients': Patient.query.count(),
@@ -44,7 +44,7 @@ def dashboard():
                            hcps=hcps)
 
 
-# ── User Management ───────────────────────────────────────────────────────────
+# â”€â”€ User Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/users')
 @login_required
@@ -136,11 +136,11 @@ def delete_user(user_id):
     return redirect(url_for('admin.users'))
 
 
-# ── Patient Management (admin view) ──────────────────────────────────────────
+# â”€â”€ Patient Management (admin view) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/patients')
 @login_required
-@admin_required
+@nurse_admin_required
 def patients():
     q = request.args.get('q', '').strip()
     status = request.args.get('status', '')
@@ -162,7 +162,7 @@ def patients():
 
 @admin_bp.route('/patients/<int:patient_id>/assign-hcp', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def assign_hcp_to_patient(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     hcp_id = request.form.get('hcp_id', type=int)
@@ -173,11 +173,11 @@ def assign_hcp_to_patient(patient_id):
     return redirect(url_for('admin.patients'))
 
 
-# ── Chat Monitoring ───────────────────────────────────────────────────────────
+# â”€â”€ Chat Monitoring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/chats')
 @login_required
-@admin_required
+@nurse_admin_required
 def chat_monitor():
     """List all patients that have chat activity."""
     patients_with_chats = (Patient.query
@@ -190,7 +190,7 @@ def chat_monitor():
 
 @admin_bp.route('/chats/patient/<int:patient_id>')
 @login_required
-@admin_required
+@nurse_admin_required
 def view_patient_chat(patient_id):
     patient = Patient.query.get_or_404(patient_id)
     messages = Message.query.filter_by(patient_id=patient_id).order_by(Message.created_at.asc()).all()
@@ -199,7 +199,7 @@ def view_patient_chat(patient_id):
 
 @admin_bp.route('/broadcast', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def broadcast():
     if request.method == 'POST':
         content    = request.form.get('content', '').strip()
@@ -223,11 +223,11 @@ def broadcast():
     return render_template('admin/broadcast.html', broadcasts=broadcasts, users=users_for_dm)
 
 
-# ── Appointment Management ────────────────────────────────────────────────────
+# â”€â”€ Appointment Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/appointments')
 @login_required
-@admin_required
+@nurse_admin_required
 def appointments():
     status_filter = request.args.get('status', '')
     query = AppointmentRequest.query
@@ -245,7 +245,7 @@ def appointments():
 
 @admin_bp.route('/appointments/<int:appt_id>/action', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def appointment_action(appt_id):
     appt   = AppointmentRequest.query.get_or_404(appt_id)
     action = request.form.get('action')
@@ -269,13 +269,13 @@ def appointment_action(appt_id):
     appt.admin_notes = notes
     appt.updated_at  = datetime.utcnow()
 
-    # ── Build notification content ───────────────────────────────────────────
+    # â”€â”€ Build notification content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     patient = appt.patient
     hcp_obj = User.query.get(hcp_id) if hcp_id else None
 
     if action == 'approve':
         date_str   = (appt.scheduled_date or appt.preferred_date).strftime('%B %d, %Y at %H:%M')
-        notif_title = '✅ Appointment Approved'
+        notif_title = 'âœ… Appointment Approved'
         notif_msg   = f'Your appointment request has been approved and confirmed for {date_str}.'
         if hcp_obj:
             notif_msg += f' Your care provider: {hcp_obj.get_full_name()}.'
@@ -283,14 +283,14 @@ def appointment_action(appt_id):
             notif_msg += f' Note from admin: {notes}'
         notif_type  = 'appointment'
     elif action == 'reject':
-        notif_title = '❌ Appointment Declined'
+        notif_title = 'âŒ Appointment Declined'
         notif_msg   = 'Your appointment request has been declined by the admin.'
         if notes:
             notif_msg += f' Reason: {notes}'
         notif_type  = 'reminder'
     else:  # reschedule / postponed
         date_str   = appt.scheduled_date.strftime('%B %d, %Y at %H:%M') if appt.scheduled_date else '(new date pending)'
-        notif_title = '🔄 Appointment Postponed / Rescheduled'
+        notif_title = 'ðŸ”„ Appointment Postponed / Rescheduled'
         notif_msg   = f'Your appointment has been rescheduled to {date_str}.'
         if notes:
             notif_msg += f' Admin note: {notes}'
@@ -322,7 +322,7 @@ def appointment_action(appt_id):
         date_str = (appt.scheduled_date or appt.preferred_date).strftime('%B %d, %Y at %H:%M')
         push_notification(
             user_id    = hcp_id,
-            title      = '📅 New Appointment Assigned',
+            title      = 'ðŸ“… New Appointment Assigned',
             message    = f'You have been assigned to {patient.get_full_name()}\'s appointment on {date_str}.',
             notif_type = 'appointment',
             link       = url_for('appointments.list_all')
@@ -335,7 +335,7 @@ def appointment_action(appt_id):
 
 @admin_bp.route('/appointments/create', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def create_appointment():
     patients = Patient.query.order_by(Patient.last_name).all()
     hcps     = User.query.filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW])).order_by(User.last_name).all()
@@ -393,13 +393,13 @@ def create_appointment():
             notif_recipients.add(patient.user_id)
 
         for uid in notif_recipients:
-            push_notification(uid, '📅 Appointment Scheduled', patient_msg,
+            push_notification(uid, 'ðŸ“… Appointment Scheduled', patient_msg,
                               notif_type='appointment',
                               link=url_for('appointments.my_appointments'))
 
         # Notify assigned HCP
         if hcp_id and patient:
-            push_notification(hcp_id, '📅 New Appointment Assigned',
+            push_notification(hcp_id, 'ðŸ“… New Appointment Assigned',
                               f'You are assigned to {patient.get_full_name()}\'s appointment on {date_label}.',
                               notif_type='appointment',
                               link=url_for('appointments.list_all'))
@@ -413,7 +413,7 @@ def create_appointment():
 
 @admin_bp.route('/alerts/create', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def create_alert():
     patients = Patient.query.order_by(Patient.last_name).all()
     hcps     = User.query.filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW])).order_by(User.last_name).all()
@@ -442,7 +442,7 @@ def create_alert():
         # Notify patient's user account
         if patient and patient.user_id:
             push_notification(patient.user_id,
-                              f'⚠️ {severity.capitalize()} Alert: {alert_type}',
+                              f'âš ï¸ {severity.capitalize()} Alert: {alert_type}',
                               message[:200],
                               notif_type='alert',
                               link=url_for('dashboard.index'))
@@ -450,7 +450,7 @@ def create_alert():
         # Notify assigned HCP
         if hcp_id and patient:
             push_notification(hcp_id,
-                              f'⚠️ Alert Assigned — {severity.capitalize()}',
+                              f'âš ï¸ Alert Assigned â€” {severity.capitalize()}',
                               f'{patient.get_full_name()}: {alert_type}. {message[:120]}',
                               notif_type='alert',
                               link=url_for('patients.view_patient', patient_id=patient_id))
@@ -464,7 +464,7 @@ def create_alert():
 
 @admin_bp.route('/notifications/create', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def create_notification():
     users = User.query.filter_by(is_active=True).order_by(User.last_name).all()
 
@@ -510,7 +510,7 @@ def create_notification():
 
 @admin_bp.route('/alerts/<int:alert_id>/assign-hcp', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def assign_alert_hcp(alert_id):
     alert  = Alert.query.get_or_404(alert_id)
     hcp_id = request.form.get('hcp_id', type=int)
@@ -519,7 +519,7 @@ def assign_alert_hcp(alert_id):
         # Notify assigned HCP
         push_notification(
             user_id=hcp_id,
-            title='⚠️ Alert Assigned to You',
+            title='âš ï¸ Alert Assigned to You',
             message=f'You have been assigned to a {alert.severity} alert for patient '
                     f'{alert.patient.get_full_name()}: {alert.alert_type}. {alert.message[:100]}',
             notif_type='alert',
@@ -530,11 +530,11 @@ def assign_alert_hcp(alert_id):
     return redirect(request.referrer or url_for('admin.dashboard'))
 
 
-# ── Education Content Management ──────────────────────────────────────────────
+# â”€â”€ Education Content Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/education')
 @login_required
-@admin_required
+@nurse_admin_required
 def education():
     status_filter = request.args.get('status', '')
     query = EducationContent.query
@@ -550,7 +550,7 @@ def education():
 
 @admin_bp.route('/education/create', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def create_education():
     from routes.education import CATEGORIES, CONTENT_TYPES
     if request.method == 'POST':
@@ -582,7 +582,7 @@ def create_education():
 
 @admin_bp.route('/education/<int:content_id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def edit_education(content_id):
     from routes.education import CATEGORIES, CONTENT_TYPES
     ec = EducationContent.query.get_or_404(content_id)
@@ -610,7 +610,7 @@ def edit_education(content_id):
 
 @admin_bp.route('/education/<int:content_id>/approve', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def approve_education(content_id):
     ec = EducationContent.query.get_or_404(content_id)
     action = request.form.get('action', 'approve')
@@ -619,7 +619,7 @@ def approve_education(content_id):
     # Notify the author
     push_notification(
         user_id    = ec.author_id,
-        title      = f'{"✅ Content Approved" if action == "approve" else "❌ Content Rejected"}',
+        title      = f'{"âœ… Content Approved" if action == "approve" else "âŒ Content Rejected"}',
         message    = f'Your submission "{ec.title}" has been {ec.status.value} by the admin.',
         notif_type = 'info',
         link       = url_for('education.library')
@@ -631,7 +631,7 @@ def approve_education(content_id):
 
 @admin_bp.route('/education/<int:content_id>/feature', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def feature_education(content_id):
     ec = EducationContent.query.get_or_404(content_id)
     ec.is_featured = not (ec.is_featured or False)
@@ -643,7 +643,7 @@ def feature_education(content_id):
 
 @admin_bp.route('/education/<int:content_id>/publish', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def publish_education(content_id):
     ec = EducationContent.query.get_or_404(content_id)
     ec.published_to_patients = not ec.published_to_patients
@@ -655,7 +655,7 @@ def publish_education(content_id):
 
 @admin_bp.route('/education/<int:content_id>/delete', methods=['POST'])
 @login_required
-@admin_required
+@nurse_admin_required
 def delete_education(content_id):
     ec = EducationContent.query.get_or_404(content_id)
     db.session.delete(ec)
@@ -664,11 +664,11 @@ def delete_education(content_id):
     return redirect(url_for('admin.education'))
 
 
-# ── Reports & Analytics ───────────────────────────────────────────────────────
+# â”€â”€ Reports & Analytics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @admin_bp.route('/reports')
 @login_required
-@admin_required
+@nurse_admin_required
 def reports():
     # Infection rate
     total_assessments  = WoundAssessment.query.count()
@@ -721,3 +721,4 @@ def reports():
                            monthly=monthly,
                            patient_msgs=patient_msgs,
                            hcp_msgs=hcp_msgs)
+

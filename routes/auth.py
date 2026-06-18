@@ -7,7 +7,7 @@ from functools import wraps
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 def admin_required(f):
-    """Decorator for admin-only routes"""
+    """Decorator for admin-only routes (strict — user management, password resets, etc.)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
@@ -15,6 +15,20 @@ def admin_required(f):
             return redirect(url_for('dashboard.index'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def nurse_admin_required(f):
+    """Decorator for routes accessible to both Admin and Nurse roles.
+    Nurses have elevated, admin-like access to clinical management features
+    (appointments, alerts, education, reports, patients) but not user account management."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role not in [UserRole.ADMIN, UserRole.NURSE]:
+            flash('Admin or Nurse access required.', 'error')
+            return redirect(url_for('dashboard.index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 def doctor_nurse_required(f):
     """Decorator for provider routes"""

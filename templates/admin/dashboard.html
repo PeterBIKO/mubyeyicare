@@ -3,7 +3,25 @@
 
 {% block content %}
 <div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-shield-halved me-2 text-primary"></i> Admin Dashboard</h2>
+    <div>
+        <h2>
+            <i class="fas fa-shield-halved me-2 text-primary"></i>
+            {% if current_user.role.value == 'nurse' %}
+            Nurse Panel
+            <span class="badge bg-info text-white ms-2" style="font-size:.65rem;vertical-align:middle;">
+                <i class="fas fa-user-nurse me-1"></i> Elevated Access
+            </span>
+            {% else %}
+            Admin Dashboard
+            {% endif %}
+        </h2>
+        {% if current_user.role.value == 'nurse' %}
+        <p class="text-muted small mb-0">
+            <i class="fas fa-info-circle me-1 text-info"></i>
+            You have elevated clinical access. User account management is restricted to Admins only.
+        </p>
+        {% endif %}
+    </div>
     <div class="d-flex flex-wrap gap-2">
         <a href="{{ url_for('admin.create_appointment') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-calendar-plus me-1"></i> New Appointment
@@ -17,14 +35,17 @@
         <a href="{{ url_for('admin.broadcast') }}" class="btn btn-secondary btn-sm">
             <i class="fas fa-bullhorn me-1"></i> Broadcast
         </a>
+        {% if current_user.role.value == 'admin' %}
         <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm">
             <i class="fas fa-user-plus me-1"></i> New User
         </a>
+        {% endif %}
     </div>
 </div>
 
 <!-- Stats -->
 <div class="row g-3 mb-4">
+    {% if current_user.role.value == 'admin' %}
     {% set cards = [
         ('Total Patients',    stats.total_patients,       'fa-bed-pulse',    'stat-info',    url_for('admin.patients')),
         ('Active Patients',   stats.active_patients,      'fa-heart-pulse',  'stat-success', url_for('admin.patients') ~ '?status=active'),
@@ -35,6 +56,17 @@
         ('Pending Content',   stats.pending_education,    'fa-graduation-cap','',            url_for('admin.education') ~ '?status=pending'),
         ('Follow-ups Done',   stats.completed_follow_ups, 'fa-calendar-check','stat-success',url_for('dashboard.analytics')),
     ] %}
+    {% else %}
+    {# Nurse: show clinical stats only (no user management links) #}
+    {% set cards = [
+        ('Total Patients',    stats.total_patients,       'fa-bed-pulse',    'stat-info',    url_for('admin.patients')),
+        ('Active Patients',   stats.active_patients,      'fa-heart-pulse',  'stat-success', url_for('admin.patients') ~ '?status=active'),
+        ('Pending Appts',     stats.pending_appointments, 'fa-calendar-clock','stat-warning', url_for('admin.appointments') ~ '?status=pending'),
+        ('Open Alerts',       stats.unresolved_alerts,    'fa-bell',         'stat-danger',  url_for('admin.reports')),
+        ('Pending Content',   stats.pending_education,    'fa-graduation-cap','',            url_for('admin.education') ~ '?status=pending'),
+        ('Follow-ups Done',   stats.completed_follow_ups, 'fa-calendar-check','stat-success',url_for('dashboard.analytics')),
+    ] %}
+    {% endif %}
     {% for label, val, icon, cls, href in cards %}
     <div class="col-6 col-md-3" data-aos="fade-up">
         <a href="{{ href }}" class="stat-card {{ cls }} stat-link text-decoration-none">
