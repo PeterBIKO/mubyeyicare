@@ -161,7 +161,7 @@
                     <div class="chat-header-name">{{ other_name }}</div>
                     <div class="chat-header-role">{{ other_role }}</div>
                 </div>
-                <a href="{% if current_user.role.value in ['patient','mother'] %}{{ url_for('dashboard.index') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}"
+                <a href="{% if current_user.role.value in ['patient','mother'] %}{{ url_for('dashboard.index') }}{% elif current_user.role.value == 'admin' %}{{ url_for('admin.chat_monitor') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}"
                    class="chat-header-back btn btn-sm btn-light btn-outline-light">
                     <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
