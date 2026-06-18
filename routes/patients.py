@@ -12,38 +12,48 @@ patients_bp = Blueprint('patients', __name__, url_prefix='/patients')
 @doctor_nurse_required
 def list_patients():
     """List all patients"""
-    page   = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     status = request.args.get('status', '')   # 'active' | 'discharged' | ''
 
-    query = Patient.query
+    base_query = Patient.query
 
     if search:
-        query = query.filter(
+        base_query = base_query.filter(
             (Patient.first_name.ilike(f'%{search}%')) |
             (Patient.last_name.ilike(f'%{search}%')) |
             (Patient.mrn.ilike(f'%{search}%')) |
             (Patient.email.ilike(f'%{search}%'))
         )
 
-    # Status filter
-    if status == 'discharged':
-        query = query.filter_by(is_active=False)
-    elif status == 'active':
-        query = query.filter_by(is_active=True)
-
+    # Role-based scoping
     if current_user.role == UserRole.ADMIN:
-        pass  # admin sees all
+        pass
     elif current_user.role == UserRole.CHW:
         if current_user.location:
-            query = query.filter(Patient.location == current_user.location)
+            base_query = base_query.filter(Patient.location == current_user.location)
         else:
-            query = query.filter(Patient.id == -1)
+            base_query = base_query.filter(Patient.id == -1)
     else:
-        query = query.filter_by(primary_doctor_id=current_user.id)
+        base_query = base_query.filter_by(primary_doctor_id=current_user.id)
 
-    patients = query.paginate(page=page, per_page=10)
-    return render_template('patients/list.html', patients=patients, search=search, status=status)
+    order = Patient.last_name.asc()
+
+    if status == 'discharged':
+        active_patients    = []
+        discharged_patients = base_query.filter_by(is_active=False).order_by(order).all()
+    elif status == 'active':
+        active_patients    = base_query.filter_by(is_active=True).order_by(order).all()
+        discharged_patients = []
+    else:
+        # Show both groups separately
+        active_patients     = base_query.filter_by(is_active=True).order_by(order).all()
+        discharged_patients = base_query.filter_by(is_active=False).order_by(order).all()
+
+    return render_template('patients/list.html',
+                           active_patients=active_patients,
+                           discharged_patients=discharged_patients,
+                           search=search,
+                           status=status)
 
 @patients_bp.route('/create', methods=['GET', 'POST'])
 @login_required
