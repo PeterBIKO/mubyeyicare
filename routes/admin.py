@@ -186,9 +186,9 @@ def chat_monitor():
 @login_required
 @admin_required
 def view_patient_chat(patient_id):
-    """Redirect admin to the main chat UI (which already permits admins)."""
-    from flask import redirect, url_for
-    return redirect(url_for('chat.patient_chat', patient_id=patient_id))
+    patient = Patient.query.get_or_404(patient_id)
+    messages = Message.query.filter_by(patient_id=patient_id).order_by(Message.created_at.asc()).all()
+    return render_template('admin/view_chat.html', patient=patient, messages=messages)
 
 
 @admin_bp.route('/broadcast', methods=['GET', 'POST'])
