@@ -1,53 +1,91 @@
 {% extends "base.html" %}
+{% block title %}Messages - MubyeyiCare{% endblock %}
 
-{% block title %}Chat - MubyeyiCare{% endblock %}
+{% block extra_css %}
+<style>
+.inbox-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .9rem 1.25rem;
+    border-bottom: 1px solid #f0f4f8;
+    transition: background .15s;
+    text-decoration: none;
+    color: inherit;
+}
+.inbox-item:hover { background: #f0f7ff; }
+.inbox-item:last-child { border-bottom: none; }
+.inbox-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a5f, #2c5282);
+    color: #fff; font-weight: 700; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.inbox-avatar.inactive { background: linear-gradient(135deg, #718096, #a0aec0); }
+.inbox-name { font-weight: 600; font-size: .95rem; color: #2d3748; }
+.inbox-preview { font-size: .82rem; color: #718096; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+.inbox-time { font-size: .75rem; color: #a0aec0; white-space: nowrap; }
+.inbox-status { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.inbox-status.active { background: #48bb78; }
+.inbox-status.inactive { background: #cbd5e0; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-comments"></i> Patient Chat</h2>
+    <h2><i class="fas fa-inbox me-2"></i> Messages</h2>
+    <span class="badge bg-primary fs-6">{{ inbox | length }} conversation{{ 's' if inbox | length != 1 }}</span>
 </div>
 
 <div class="card" data-aos="fade-up">
-    <div class="card-header bg-primary text-white">
-        <i class="fas fa-list me-2"></i> Select a Patient to Chat
+    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+        <span><i class="fas fa-comments me-2"></i> Patient Conversations</span>
+        <small class="text-white-50">Click a patient to open their chat</small>
     </div>
+
+    {% if inbox %}
     <div class="card-body p-0">
-        {% if patients %}
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>Patient</th>
-                        <th>MRN</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th class="text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for patient in patients %}
-                    <tr>
-                        <td class="fw-medium">{{ patient.get_full_name() }}</td>
-                        <td><code>{{ patient.mrn }}</code></td>
-                        <td class="text-muted small">{{ patient.phone }}</td>
-                        <td class="text-muted small">{{ patient.email or '—' }}</td>
-                        <td class="text-center">
-                            <a href="{{ url_for('chat.patient_chat', patient_id=patient.id) }}"
-                               class="btn btn-sm btn-primary">
-                                <i class="fas fa-comments me-1"></i> Chat
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="text-center py-5 text-muted">
-            <i class="fas fa-comments-slash fa-2x d-block mb-2 opacity-30"></i>
-            No patients available for chat.
-        </div>
-        {% endif %}
+        {% for item in inbox %}
+        {% set p = item.patient %}
+        {% set msg = item.last_msg %}
+        <a href="{{ url_for('chat.patient_chat', patient_id=p.id) }}" class="inbox-item">
+            <div class="inbox-avatar {{ '' if p.is_active else 'inactive' }}">
+                {{ p.first_name[0] | upper }}{{ p.last_name[0] | upper }}
+            </div>
+            <div class="flex-grow-1 overflow-hidden">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <span class="inbox-name">{{ p.get_full_name() }}</span>
+                    {% if msg %}
+                    <span class="inbox-time">{{ msg.created_at.strftime('%b %d') }}</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <div class="inbox-status {{ 'active' if p.is_active else 'inactive' }}" title="{{ 'Active' if p.is_active else 'Discharged' }}"></div>
+                    <span class="inbox-preview">
+                        {% if msg %}
+                            {% if msg.sender_id == current_user.id %}<em class="text-muted">You: </em>{% endif %}
+                            {{ msg.content if msg.content else '📎 Attachment' }}
+                        {% else %}
+                            <em class="text-muted">No messages yet — start the conversation</em>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <code class="text-muted" style="font-size:.72rem;">{{ p.mrn }}</code>
+                    <span class="text-muted" style="font-size:.72rem;">&middot; Day {{ p.days_post_surgery() }} post-op</span>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right text-muted" style="font-size:.75rem;"></i>
+        </a>
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-comments-slash fa-3x d-block mb-3 opacity-25"></i>
+        <p class="fw-medium mb-1">No patients assigned yet</p>
+        <p class="small">Patients will appear here once they are assigned to you.</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

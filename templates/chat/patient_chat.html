@@ -1,135 +1,243 @@
 {% extends "base.html" %}
-
 {% block title %}Chat - MubyeyiCare{% endblock %}
 
 {% block extra_css %}
 <style>
-    .chat-box {
-        height: 55vh;
-        overflow-y: auto;
-        padding: 1rem 1.25rem;
-        background: #f7fafc;
-        border-radius: 0;
-    }
-    .msg-bubble {
-        max-width: 78%;
-        padding: .65rem 1rem;
-        border-radius: 16px;
-        font-size: .9rem;
-        line-height: 1.45;
-    }
-    .msg-bubble.sent {
-        background: linear-gradient(135deg, #1e3a5f, #2c5282);
-        color: #fff;
-        border-bottom-right-radius: 4px;
-    }
-    .msg-bubble.received {
-        background: #fff;
-        color: #2d3748;
-        border: 1px solid #e2e8f0;
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    }
-    .msg-meta { font-size: .72rem; opacity: .7; margin-top: .3rem; }
-    .chat-input { border-top: 1px solid #e2e8f0; padding: 1rem 1.25rem; background: #fff; }
-    .chat-input textarea { resize: none; }
+/* ── Chat shell ─────────────────────────────────── */
+.chat-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 140px);
+    min-height: 520px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09);
+}
+
+/* ── Header ─────────────────────────────────────── */
+.chat-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+    padding: .85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    flex-shrink: 0;
+}
+.chat-header-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    border: 2px solid rgba(255,255,255,.3);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; color: #fff; flex-shrink: 0;
+}
+.chat-header-name  { font-weight: 600; color: #fff; font-size: .97rem; }
+.chat-header-role  { font-size: .75rem; color: rgba(255,255,255,.65); }
+.chat-header-back  { margin-left: auto; }
+
+/* ── Messages ───────────────────────────────────── */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+    background: #f0f4f8;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+}
+.chat-messages::-webkit-scrollbar { width: 5px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+
+/* Date separator */
+.date-sep {
+    text-align: center;
+    margin: .75rem 0 .5rem;
+}
+.date-sep span {
+    background: #e2e8f0;
+    color: #718096;
+    font-size: .7rem;
+    padding: .2rem .75rem;
+    border-radius: 20px;
+}
+
+/* Bubbles */
+.msg-row {
+    display: flex;
+    margin-bottom: .4rem;
+}
+.msg-row.sent  { justify-content: flex-end; }
+.msg-row.recv  { justify-content: flex-start; }
+
+.bubble {
+    max-width: 72%;
+    padding: .6rem .95rem;
+    border-radius: 18px;
+    font-size: .9rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+.bubble.sent {
+    background: linear-gradient(135deg, #1e3a5f, #2c5282);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+.bubble.recv {
+    background: #fff;
+    color: #2d3748;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.bubble img { max-width: 240px; border-radius: 10px; margin-top: .4rem; display: block; }
+.bubble video { max-width: 240px; border-radius: 10px; margin-top: .4rem; display: block; }
+
+.msg-meta {
+    font-size: .7rem;
+    color: #a0aec0;
+    margin-top: .2rem;
+    padding: 0 .3rem;
+}
+.msg-row.sent  .msg-meta { text-align: right; }
+.msg-row.recv  .msg-meta { text-align: left; }
+
+/* ── Input bar ──────────────────────────────────── */
+.chat-input-bar {
+    background: #fff;
+    border-top: 1px solid #e2e8f0;
+    padding: .75rem 1.25rem;
+    flex-shrink: 0;
+}
+.chat-input-bar textarea {
+    resize: none;
+    border-radius: 22px;
+    padding: .6rem 1rem;
+    font-size: .9rem;
+    border: 1px solid #e2e8f0;
+    background: #f7fafc;
+    transition: border-color .2s;
+}
+.chat-input-bar textarea:focus {
+    border-color: #4299e1;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(66,153,225,.15);
+}
+.attach-label {
+    cursor: pointer;
+    padding: .45rem .65rem;
+    border-radius: 50%;
+    color: #718096;
+    transition: background .15s;
+}
+.attach-label:hover { background: #edf2f7; color: #2b6cb0; }
+#attachPreview {
+    font-size: .78rem;
+    color: #4299e1;
+    display: none;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .35rem;
+    padding: .3rem .75rem;
+    background: #ebf8ff;
+    border-radius: 8px;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-comments me-2"></i>
-        Chat with {{ selected_provider.get_full_name() if selected_provider else patient.get_full_name() }}
-    </h2>
-    <a href="{% if current_user.role.value in ['patient', 'mother'] %}{{ url_for('dashboard.index') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}"
-       class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back
-    </a>
-</div>
+
+{% set other_name = selected_provider.get_full_name() if selected_provider else patient.get_full_name() %}
+{% set other_role = selected_provider.role.value.capitalize() if selected_provider else 'Patient · MRN ' ~ patient.mrn %}
+{% set initials   = (selected_provider.first_name[0] ~ selected_provider.last_name[0]) | upper if selected_provider else (patient.first_name[0] ~ patient.last_name[0]) | upper %}
 
 <div class="row g-3">
-    <!-- Chat panel -->
+    <!-- ── Chat window ── -->
     <div class="col-lg-8">
-        <div class="card p-0 overflow-hidden">
-            <!-- Chat header -->
-            <div class="card-header bg-primary text-white d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center"
-                     style="width:40px;height:40px;flex-shrink:0;">
-                    <i class="fas fa-user text-primary"></i>
-                </div>
+        <div class="chat-shell" data-aos="fade-up">
+
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="chat-header-avatar">{{ initials }}</div>
                 <div>
-                    <div class="fw-semibold">
-                        {{ selected_provider.get_full_name() if selected_provider else patient.get_full_name() }}
-                    </div>
-                    <small class="text-white-50">
-                        {% if selected_provider %}
-                            {{ selected_provider.role.value.capitalize() }}
-                        {% else %}
-                            MRN: {{ patient.mrn }}
-                        {% endif %}
-                    </small>
+                    <div class="chat-header-name">{{ other_name }}</div>
+                    <div class="chat-header-role">{{ other_role }}</div>
                 </div>
+                <a href="{% if current_user.role.value in ['patient','mother'] %}{{ url_for('dashboard.index') }}{% else %}{{ url_for('chat.chat_list') }}{% endif %}"
+                   class="chat-header-back btn btn-sm btn-light btn-outline-light">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
             </div>
 
             <!-- Messages -->
-            <div class="chat-box" id="chatBox">
+            <div class="chat-messages" id="chatBox">
                 {% if messages %}
-                    {% for message in messages %}
-                    <div class="mb-3 d-flex {{ 'justify-content-end' if message.sender_id == current_user.id else 'justify-content-start' }}"
-                         data-message-id="{{ message.id }}">
-                        <div>
-                            <div class="msg-bubble {{ 'sent' if message.sender_id == current_user.id else 'received' }}">
-                                {% if message.content %}<p class="mb-0">{{ message.content }}</p>{% endif %}
-                                {% if message.attachment_url %}
-                                    {% if message.attachment_type and message.attachment_type.startswith('image') %}
-                                        <img src="{{ message.attachment_url }}" class="img-fluid rounded mt-1" style="max-width:260px;" alt="image">
-                                    {% elif message.attachment_type and message.attachment_type.startswith('video') %}
-                                        <video controls class="img-fluid rounded mt-1" style="max-width:260px;">
-                                            <source src="{{ message.attachment_url }}" type="{{ message.attachment_type }}">
-                                        </video>
-                                    {% else %}
-                                        <a href="{{ message.attachment_url }}" target="_blank"
-                                           class="{{ 'text-white' if message.sender_id == current_user.id else 'text-primary' }}">
-                                            <i class="fas fa-paperclip me-1"></i>{{ message.attachment_filename or 'Download' }}
-                                        </a>
+                    {% set ns = namespace(last_date=none) %}
+                    {% for msg in messages %}
+                        {% set msg_date = msg.created_at.strftime('%Y-%m-%d') %}
+                        {% if msg_date != ns.last_date %}
+                        <div class="date-sep">
+                            <span>{{ msg.created_at.strftime('%A, %B %d') }}</span>
+                        </div>
+                        {% set ns.last_date = msg_date %}
+                        {% endif %}
+                        {% set is_me = msg.sender_id == current_user.id %}
+                        <div class="msg-row {{ 'sent' if is_me else 'recv' }}" data-message-id="{{ msg.id }}">
+                            <div>
+                                <div class="bubble {{ 'sent' if is_me else 'recv' }}">
+                                    {% if msg.content %}<p class="mb-0">{{ msg.content }}</p>{% endif %}
+                                    {% if msg.attachment_url %}
+                                        {% if msg.attachment_type and msg.attachment_type.startswith('image') %}
+                                            <img src="{{ msg.attachment_url }}" alt="image">
+                                        {% elif msg.attachment_type and msg.attachment_type.startswith('video') %}
+                                            <video controls><source src="{{ msg.attachment_url }}" type="{{ msg.attachment_type }}"></video>
+                                        {% else %}
+                                            <a href="{{ msg.attachment_url }}" target="_blank"
+                                               class="{{ 'text-white-50' if is_me else 'text-primary' }}">
+                                                <i class="fas fa-paperclip me-1"></i>{{ msg.attachment_filename or 'File' }}
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
-                                {% endif %}
-                            </div>
-                            <div class="msg-meta {{ 'text-end' if message.sender_id == current_user.id else '' }}">
-                                {% if message.sender_id == current_user.id %}You{% else %}{{ message.sender.get_full_name() if message.sender else message.sender_role.capitalize() }}{% endif %}
-                                &middot; {{ message.created_at.strftime('%b %d %H:%M') }}
+                                </div>
+                                <div class="msg-meta">
+                                    {% if is_me %}You{% else %}{{ msg.sender.get_full_name() if msg.sender else msg.sender_role.capitalize() }}{% endif %}
+                                    &nbsp;·&nbsp;{{ msg.created_at.strftime('%H:%M') }}
+                                </div>
                             </div>
                         </div>
-                    </div>
                     {% endfor %}
                 {% else %}
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-comments fa-2x d-block mb-2 opacity-30"></i>
-                    No messages yet. Start the conversation!
+                <div class="text-center text-muted py-5 my-auto">
+                    <i class="fas fa-comments fa-2x d-block mb-2 opacity-25"></i>
+                    <p class="small mb-0">No messages yet.</p>
+                    <p class="small">Say hello to get the conversation started!</p>
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Input -->
-            <div class="chat-input">
-                <form id="chatForm" method="POST"
-                      action="{{ url_for('chat.patient_chat', patient_id=patient.id, provider_id=selected_provider.id if selected_provider else None) }}"
-                      enctype="multipart/form-data">
+            <!-- Input bar -->
+            <div class="chat-input-bar">
+                <form id="chatForm" enctype="multipart/form-data">
                     {% if selected_provider %}
                     <input type="hidden" name="provider_id" value="{{ selected_provider.id }}">
                     {% endif %}
-                    <div class="mb-2">
-                        <textarea id="message" name="message" class="form-control" rows="3"
-                                  placeholder="Type your message…"></textarea>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                        <label class="input-group w-auto" style="max-width:260px;">
-                            <span class="input-group-text"><i class="fas fa-paperclip"></i></span>
-                            <input type="file" class="form-control form-control-sm" id="attachment" name="attachment"
-                                   accept="image/*,video/*">
+                    <div class="d-flex align-items-end gap-2">
+                        <label class="attach-label mb-0" title="Attach image or video">
+                            <i class="fas fa-paperclip fa-lg"></i>
+                            <input type="file" id="attachment" name="attachment" class="d-none" accept="image/*,video/*">
                         </label>
-                        <button type="submit" class="btn btn-primary no-spinner" id="sendBtn">
-                            <i class="fas fa-paper-plane me-1"></i> Send
+                        <div class="flex-grow-1">
+                            <textarea id="message" name="message" rows="1"
+                                      class="form-control"
+                                      placeholder="Type a message… (Ctrl+Enter to send)"
+                                      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+                            <div id="attachPreview">
+                                <i class="fas fa-file-image"></i>
+                                <span id="attachName"></span>
+                                <button type="button" class="btn-close btn-close-sm ms-auto" onclick="clearAttach()"></button>
+                            </div>
+                        </div>
+                        <button type="submit" id="sendBtn" class="btn btn-primary rounded-circle no-spinner"
+                                style="width:42px;height:42px;padding:0;flex-shrink:0;" title="Send (Ctrl+Enter)">
+                            <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </form>
@@ -137,68 +245,98 @@
         </div>
     </div>
 
-    <!-- Info sidebar -->
-    <div class="col-lg-4">
-        <!-- Provider card (patients only) -->
-        {% if current_user.role.value in ['patient', 'mother'] %}
-        <div class="card mb-3" data-aos="fade-up">
-            <div class="card-header bg-primary text-white">
-                <i class="fas fa-user-doctor me-2"></i> Chatting with
-            </div>
-            <div class="card-body small">
+    <!-- ── Sidebar ── -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="60">
+
+        {% if current_user.role.value in ['patient','mother'] %}
+        <!-- Patient sees provider info -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white"><i class="fas fa-user-doctor me-2"></i> Chatting with</div>
+            <div class="card-body">
                 {% if selected_provider %}
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
-                         style="width:44px;height:44px;font-size:1rem;">
+                         style="width:52px;height:52px;font-size:1.1rem;">
                         {{ selected_provider.first_name[0] | upper }}{{ selected_provider.last_name[0] | upper }}
                     </div>
                     <div>
                         <div class="fw-semibold">{{ selected_provider.get_full_name() }}</div>
-                        <div class="text-muted">{{ selected_provider.role.value.capitalize() }}</div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                            {{ selected_provider.role.value.capitalize() }}
+                        </span>
                         {% if selected_provider.email %}
-                        <div class="text-muted">{{ selected_provider.email }}</div>
+                        <div class="small text-muted mt-1">{{ selected_provider.email }}</div>
+                        {% endif %}
+                        {% if selected_provider.phone %}
+                        <div class="small text-muted">{{ selected_provider.phone }}</div>
                         {% endif %}
                     </div>
                 </div>
-                {% else %}
-                <p class="text-muted mb-2">No provider selected.</p>
                 {% endif %}
-                <a href="{{ url_for('chat.patient_choose_provider') }}"
-                   class="btn btn-outline-secondary btn-sm w-100">
+                <a href="{{ url_for('chat.patient_choose_provider') }}" class="btn btn-outline-secondary btn-sm w-100">
                     <i class="fas fa-users me-1"></i> Chat with a different provider
                 </a>
             </div>
         </div>
-        {% endif %}
 
-        <!-- Patient info (providers see this) -->
-        {% if current_user.role.value not in ['patient', 'mother'] %}
-        <div class="card" data-aos="fade-up">
-            <div class="card-header bg-secondary text-white">
-                <i class="fas fa-id-card me-2"></i> Patient Info
-            </div>
-            <div class="card-body small">
-                <ul class="list-unstyled mb-0">
-                    <li class="py-1 border-bottom"><span class="text-muted">Name</span><br><strong>{{ patient.get_full_name() }}</strong></li>
-                    <li class="py-1 border-bottom"><span class="text-muted">MRN</span><br><code>{{ patient.mrn }}</code></li>
-                    <li class="py-1 border-bottom"><span class="text-muted">Phone</span><br>{{ patient.phone }}</li>
-                    <li class="py-1 border-bottom"><span class="text-muted">Email</span><br>{{ patient.email or '—' }}</li>
-                    <li class="py-1 border-bottom"><span class="text-muted">Primary Doctor</span><br>{{ patient.primary_doctor.get_full_name() }}</li>
-                    <li class="py-1">
-                        <span class="text-muted">Status</span><br>
-                        {% if patient.is_active %}
-                        <span class="badge bg-success">Active</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Discharged</span>
-                        {% endif %}
+        <!-- Emergency tip -->
+        <div class="alert alert-danger small">
+            <p class="fw-semibold mb-1"><i class="fas fa-triangle-exclamation me-1"></i> Seek urgent care if you have:</p>
+            <ul class="mb-0 ps-3">
+                <li>Heavy bleeding or foul discharge</li>
+                <li>Fever above 38°C</li>
+                <li>Severe or worsening pain</li>
+                <li>Wound opening</li>
+            </ul>
+        </div>
+
+        {% else %}
+        <!-- HCP / Admin sees patient info -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white"><i class="fas fa-id-card me-2"></i> Patient</div>
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0"
+                         style="width:52px;height:52px;font-size:1.1rem;background:{{ '#1e3a5f' if patient.is_active else '#718096' }};">
+                        {{ patient.first_name[0] | upper }}{{ patient.last_name[0] | upper }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ patient.get_full_name() }}</div>
+                        <code class="small">{{ patient.mrn }}</code>
+                        <div class="mt-1">
+                            <span class="badge bg-{{ 'success' if patient.is_active else 'secondary' }}">
+                                {{ 'Active' if patient.is_active else 'Discharged' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <ul class="list-unstyled small mb-3">
+                    <li class="d-flex justify-content-between border-bottom py-1">
+                        <span class="text-muted">Phone</span><span>{{ patient.phone }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between border-bottom py-1">
+                        <span class="text-muted">Email</span><span>{{ patient.email or '—' }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between border-bottom py-1">
+                        <span class="text-muted">Surgery</span><span>{{ patient.surgery_date.strftime('%b %d, %Y') }}</span>
+                    </li>
+                    <li class="d-flex justify-content-between py-1">
+                        <span class="text-muted">Days post-op</span><span class="fw-semibold">{{ patient.days_post_surgery() }}</span>
                     </li>
                 </ul>
+                <a href="{{ url_for('patients.view_patient', patient_id=patient.id) }}"
+                   class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Full Record
+                </a>
             </div>
         </div>
         {% endif %}
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 (function () {
     var patientId     = {{ patient.id }};
@@ -210,7 +348,9 @@
     var sendBtn       = document.getElementById('sendBtn');
     var lastId        = 0;
 
-    function scrollBottom() { chatBox.scrollTop = chatBox.scrollHeight; }
+    function scrollBottom() {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
     function getLastId() {
         var ids = Array.from(chatBox.querySelectorAll('[data-message-id]'))
@@ -219,18 +359,23 @@
         return ids.length ? Math.max.apply(null, ids) : 0;
     }
 
+    function formatTime(iso) {
+        var d = new Date(iso);
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+
     function renderMessage(m) {
         if (m.id && chatBox.querySelector('[data-message-id="' + m.id + '"]')) return;
         var isMe = m.sender_id === currentUserId;
 
-        var wrapper = document.createElement('div');
-        wrapper.className = 'mb-3 d-flex ' + (isMe ? 'justify-content-end' : 'justify-content-start');
-        if (m.id) wrapper.dataset.messageId = m.id;
+        var row = document.createElement('div');
+        row.className = 'msg-row ' + (isMe ? 'sent' : 'recv');
+        if (m.id) row.dataset.messageId = m.id;
 
         var inner = document.createElement('div');
 
         var bubble = document.createElement('div');
-        bubble.className = 'msg-bubble ' + (isMe ? 'sent' : 'received');
+        bubble.className = 'bubble ' + (isMe ? 'sent' : 'recv');
 
         if (m.content) {
             var p = document.createElement('p');
@@ -242,43 +387,36 @@
             if (m.attachment_type && m.attachment_type.startsWith('image')) {
                 var img = document.createElement('img');
                 img.src = m.attachment_url;
-                img.className = 'img-fluid rounded mt-1';
-                img.style.maxWidth = '260px';
                 bubble.appendChild(img);
             } else if (m.attachment_type && m.attachment_type.startsWith('video')) {
                 var vid = document.createElement('video');
                 vid.controls = true;
-                vid.className = 'img-fluid rounded mt-1';
-                vid.style.maxWidth = '260px';
                 var src = document.createElement('source');
-                src.src = m.attachment_url;
-                src.type = m.attachment_type;
-                vid.appendChild(src);
-                bubble.appendChild(vid);
+                src.src = m.attachment_url; src.type = m.attachment_type;
+                vid.appendChild(src); bubble.appendChild(vid);
             } else {
                 var a = document.createElement('a');
-                a.href = m.attachment_url;
-                a.target = '_blank';
-                a.textContent = m.attachment_filename || 'Download';
+                a.href = m.attachment_url; a.target = '_blank';
+                a.className = isMe ? 'text-white-50' : 'text-primary';
+                a.innerHTML = '<i class="fas fa-paperclip me-1"></i>' + (m.attachment_filename || 'File');
                 bubble.appendChild(a);
             }
         }
 
         var meta = document.createElement('div');
-        meta.className = 'msg-meta' + (isMe ? ' text-end' : '');
-        var senderName = isMe ? 'You' : (m.sender_name || m.sender_role || 'Unknown');
-        var ts = m.created_at ? new Date(m.created_at).toLocaleString() : '';
-        meta.textContent = senderName + ' · ' + ts;
+        meta.className = 'msg-meta';
+        var name = isMe ? 'You' : (m.sender_name || m.sender_role || 'Unknown');
+        meta.textContent = name + ' · ' + (m.created_at ? formatTime(m.created_at) : '');
 
         inner.appendChild(bubble);
         inner.appendChild(meta);
-        wrapper.appendChild(inner);
-        chatBox.appendChild(wrapper);
+        row.appendChild(inner);
+        chatBox.appendChild(row);
     }
 
     async function fetchMessages() {
         try {
-            var res = await fetch(location.origin + '/chat/patient/' + patientId + '/messages?since_id=' + lastId);
+            var res = await fetch('/chat/patient/' + patientId + '/messages?since_id=' + lastId);
             if (!res.ok) return;
             var data = await res.json();
             if (Array.isArray(data) && data.length) {
@@ -288,17 +426,21 @@
                 });
                 scrollBottom();
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {}
     }
 
     chatForm.addEventListener('submit', async function (e) {
         e.preventDefault();
+        var content = (textarea.value || '').trim();
+        if (!content && !attachInput.files.length) return;
+
         var formData = new FormData();
-        formData.append('message', (textarea.value || '').trim());
+        formData.append('message', content);
         if (attachInput.files.length) formData.append('attachment', attachInput.files[0]);
+
         sendBtn.disabled = true;
         try {
-            var res = await fetch(location.origin + '/chat/patient/' + patientId + '/send', {
+            var res = await fetch('/chat/patient/' + patientId + '/send', {
                 method: 'POST', body: formData, credentials: 'same-origin'
             });
             if (res.ok) {
@@ -306,19 +448,35 @@
                 renderMessage(m);
                 lastId = Math.max(lastId, m.id || lastId);
                 textarea.value = '';
-                attachInput.value = '';
+                textarea.style.height = 'auto';
+                clearAttach();
                 scrollBottom();
             } else {
-                var err = await res.json();
-                alert(err.error || 'Failed to send message');
+                var err = await res.json().catch(function(){return {};});
+                alert(err.error || 'Failed to send');
             }
-        } catch (err) { console.error(err); alert('Failed to send message'); }
+        } catch (err) { alert('Failed to send message'); }
         finally { sendBtn.disabled = false; }
     });
 
-    /* Ctrl+Enter to send */
+    /* Ctrl+Enter sends */
     textarea.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && e.ctrlKey) { chatForm.dispatchEvent(new Event('submit')); }
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    /* Attachment preview */
+    attachInput.addEventListener('change', function () {
+        var preview = document.getElementById('attachPreview');
+        var nameEl  = document.getElementById('attachName');
+        if (attachInput.files.length) {
+            nameEl.textContent = attachInput.files[0].name;
+            preview.style.display = 'flex';
+        } else {
+            preview.style.display = 'none';
+        }
     });
 
     lastId = getLastId();
@@ -326,5 +484,10 @@
     fetchMessages();
     setInterval(fetchMessages, 3000);
 })();
+
+function clearAttach() {
+    document.getElementById('attachment').value = '';
+    document.getElementById('attachPreview').style.display = 'none';
+}
 </script>
 {% endblock %}

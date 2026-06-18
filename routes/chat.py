@@ -20,7 +20,7 @@ def allowed_file(filename):
 @login_required
 @doctor_nurse_required
 def chat_list():
-    """List patients available for chat"""
+    """Inbox: list patients with their last message and timestamp."""
     if current_user.role == UserRole.ADMIN:
         patients = Patient.query.order_by(Patient.last_name.asc(), Patient.first_name.asc()).all()
     elif current_user.role == UserRole.CHW:
@@ -31,7 +31,19 @@ def chat_list():
     else:
         patients = Patient.query.filter_by(primary_doctor_id=current_user.id).order_by(Patient.last_name.asc(), Patient.first_name.asc()).all()
 
-    return render_template('chat/list.html', patients=patients)
+    # Attach last message to each patient for inbox preview
+    inbox = []
+    for p in patients:
+        last_msg = (Message.query
+                    .filter_by(patient_id=p.id)
+                    .order_by(Message.created_at.desc())
+                    .first())
+        inbox.append({'patient': p, 'last_msg': last_msg})
+
+    # Sort by most recent activity first
+    inbox.sort(key=lambda x: x['last_msg'].created_at if x['last_msg'] else x['patient'].created_at, reverse=True)
+
+    return render_template('chat/list.html', inbox=inbox)
 
 @chat_bp.route('/me')
 @login_required
