@@ -19,7 +19,7 @@
             <div class="col-md-3">
                 <select class="form-select form-select-sm" name="status">
                     <option value="">All</option>
-                    <option value="active" {{ 'selected' if status == 'active' }}>Active</option>
+                    <option value="active"     {{ 'selected' if status == 'active' }}>Active</option>
                     <option value="discharged" {{ 'selected' if status == 'discharged' }}>Discharged</option>
                 </select>
             </div>
@@ -49,36 +49,17 @@
                         <td class="small text-muted">{{ p.surgery_date.strftime('%b %d, %Y') }}</td>
                         <td class="text-end">
                             <div class="d-flex gap-1 justify-content-end">
-                                <a href="{{ url_for('patients.view_patient', patient_id=p.id) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
-                                <a href="{{ url_for('patients.edit_patient', patient_id=p.id) }}" class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-pen"></i></a>
-                                <!-- Assign HCP -->
+                                <a href="{{ url_for('patients.view_patient', patient_id=p.id) }}"
+                                   class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
+                                <a href="{{ url_for('patients.edit_patient', patient_id=p.id) }}"
+                                   class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-pen"></i></a>
                                 <button class="btn btn-sm btn-outline-secondary" title="Assign HCP"
-                                        data-bs-toggle="modal" data-bs-target="#assignModal{{ p.id }}"><i class="fas fa-user-doctor"></i></button>
+                                        data-bs-toggle="modal" data-bs-target="#assignModal{{ p.id }}">
+                                    <i class="fas fa-user-doctor"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
-                    <!-- Assign HCP modal -->
-                    <div class="modal fade" id="assignModal{{ p.id }}" tabindex="-1">
-                        <div class="modal-dialog modal-sm">
-                            <div class="modal-content">
-                                <div class="modal-header"><h5 class="modal-title">Assign HCP — {{ p.get_full_name() }}</h5></div>
-                                <form method="POST" action="{{ url_for('admin.assign_hcp_to_patient', patient_id=p.id) }}">
-                                    <div class="modal-body">
-                                        <select class="form-select" name="hcp_id" required>
-                                            <option value="">— Select HCP —</option>
-                                            {% for h in hcps %}
-                                            <option value="{{ h.id }}" {{ 'selected' if p.primary_doctor_id == h.id }}>{{ h.get_full_name() }} ({{ h.role.value }})</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
-                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
                     {% else %}
                     <tr><td colspan="7" class="text-center text-muted py-4">No patients found.</td></tr>
                     {% endfor %}
@@ -87,4 +68,43 @@
         </div>
     </div>
 </div>
+
+<!-- ── Assign HCP modals — outside the table ── -->
+{% for p in patients %}
+<div class="modal fade" id="assignModal{{ p.id }}" tabindex="-1" aria-labelledby="assignLabel{{ p.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="assignLabel{{ p.id }}">
+                    <i class="fas fa-user-doctor me-1"></i> Assign HCP — {{ p.get_full_name() }}
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.assign_hcp_to_patient', patient_id=p.id) }}">
+                <div class="modal-body">
+                    <label class="form-label small fw-medium">Select Healthcare Provider</label>
+                    <select class="form-select" name="hcp_id" required>
+                        <option value="">— Select HCP —</option>
+                        {% for h in hcps %}
+                        <option value="{{ h.id }}" {{ 'selected' if p.primary_doctor_id == h.id }}>
+                            {{ h.get_full_name() }} ({{ h.role.value.capitalize() }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="mt-2 small text-muted">
+                        Current: <strong>{{ p.primary_doctor.get_full_name() }}</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-check me-1"></i> Assign
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}

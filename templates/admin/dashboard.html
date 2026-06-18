@@ -52,7 +52,11 @@
                     <form method="POST" action="{{ url_for('admin.assign_alert_hcp', alert_id=a.id) }}" class="d-flex gap-1">
                         <select name="hcp_id" class="form-select form-select-sm" style="width:auto;font-size:.7rem;">
                             <option value="">Assign HCP</option>
-                            {% for u in [] %}{% endfor %}{# populated via admin.patients route #}
+                            {% for h in hcps %}
+                            <option value="{{ h.id }}" {{ 'selected' if a.assigned_hcp_id == h.id }}>
+                                {{ h.get_full_name() }} ({{ h.role.value }})
+                            </option>
+                            {% endfor %}
                         </select>
                         <button class="btn btn-sm btn-outline-primary py-0" type="submit"><i class="fas fa-check"></i></button>
                     </form>

@@ -32,10 +32,14 @@ def dashboard():
     recent_alerts = Alert.query.filter_by(is_resolved=False).order_by(Alert.created_at.desc()).limit(5).all()
     recent_appointments = AppointmentRequest.query.order_by(AppointmentRequest.created_at.desc()).limit(5).all()
     broadcasts = BroadcastMessage.query.order_by(BroadcastMessage.created_at.desc()).limit(5).all()
+    hcps = (User.query
+            .filter(User.role.in_([UserRole.DOCTOR, UserRole.NURSE, UserRole.CHW]))
+            .order_by(User.last_name.asc()).all())
     return render_template('admin/dashboard.html', stats=stats,
                            recent_alerts=recent_alerts,
                            recent_appointments=recent_appointments,
-                           broadcasts=broadcasts)
+                           broadcasts=broadcasts,
+                           hcps=hcps)
 
 
 # ── User Management ───────────────────────────────────────────────────────────
