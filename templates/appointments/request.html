@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Request Appointment - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-calendar-plus me-2"></i> Request an Appointment</h2>
+    <a href="{{ url_for('appointments.my_appointments') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-list me-1"></i> My Requests
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-user me-2"></i> {{ patient.get_full_name() }}
+                <small class="text-white-50 ms-2">— {{ patient.mrn }}</small>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('appointments.request_appointment') }}">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Preferred Date <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                <input type="date" class="form-control" name="preferred_date" required
+                                       min="{{ '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Preferred Time</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                <input type="time" class="form-control" name="preferred_time" value="09:00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Reason / Concerns</label>
+                        <textarea class="form-control" name="reason" rows="4"
+                                  placeholder="Describe your symptoms or reason for the appointment…"></textarea>
+                    </div>
+                    <div class="alert alert-info small mb-4">
+                        <i class="fas fa-circle-info me-1"></i>
+                        Your request will be reviewed by the care team. You'll be notified once it's approved or rescheduled.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-paper-plane me-1"></i> Submit Request
+                        </button>
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

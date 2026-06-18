@@ -248,16 +248,131 @@ class Alert(db.Model):
     """Alert system for critical observations"""
     id = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
-    
-    alert_type = db.Column(db.String(100), nullable=False)  # e.g., "Infection Risk", "Delayed Healing"
-    severity = db.Column(db.String(50), nullable=False)  # e.g., "Low", "Medium", "High", "Critical"
+    assigned_hcp_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    alert_type = db.Column(db.String(100), nullable=False)
+    severity = db.Column(db.String(50), nullable=False)
     message = db.Column(db.Text, nullable=False)
-    
+
     is_resolved = db.Column(db.Boolean, default=False)
     resolution_notes = db.Column(db.Text)
-    
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     resolved_at = db.Column(db.DateTime)
 
+    assigned_hcp = db.relationship('User', foreign_keys=[assigned_hcp_id])
+
     def __repr__(self):
         return f'<Alert Patient:{self.patient_id} Type:{self.alert_type}>'
+
+
+# ── Appointment Requests ──────────────────────────────────────────────────────
+
+class AppointmentStatus(enum.Enum):
+    PENDING   = 'pending'
+    APPROVED  = 'approved'
+    REJECTED  = 'rejected'
+    RESCHEDULED = 'rescheduled'
+
+
+class AppointmentRequest(db.Model):
+    """Patient-initiated appointment requests managed by admin/HCP."""
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id      = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    requested_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    preferred_date  = db.Column(db.DateTime, nullable=False)
+    reason          = db.Column(db.Text)
+    status = db.Column(db.Enum(AppointmentStatus), default=AppointmentStatus.PENDING, nullable=False)
+    assigned_hcp_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    scheduled_date  = db.Column(db.DateTime)
+    admin_notes     = db.Column(db.Text)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at      = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    patient      = db.relationship('Patient', backref='appointment_requests', foreign_keys=[patient_id])
+    requested_by = db.relationship('User', foreign_keys=[requested_by_id])
+    assigned_hcp = db.relationship('User', foreign_keys=[assigned_hcp_id])
+
+    def __repr__(self):
+        return f'<AppointmentRequest Patient:{self.patient_id} Status:{self.status.value}>'
+
+
+# ── Public Message Wall ───────────────────────────────────────────────────────
+
+class PublicMessage(db.Model):
+    """Public HCP/patient wall posts (visible to all authenticated users)."""
+    id         = db.Column(db.Integer, primary_key=True)
+    author_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content    = db.Column(db.Text, nullable=False)
+    attachment_url  = db.Column(db.String(255))
+    attachment_type = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    author  = db.relationship('User', backref='wall_posts')
+    replies = db.relationship('PublicMessageReply', backref='post',
+                              lazy='dynamic', cascade='all, delete-orphan',
+                              order_by='PublicMessageReply.created_at')
+
+    def __repr__(self):
+        return f'<PublicMessage by User:{self.author_id}>'
+
+
+class PublicMessageReply(db.Model):
+    """Replies to public wall posts."""
+    id         = db.Column(db.Integer, primary_key=True)
+    post_id    = db.Column(db.Integer, db.ForeignKey('public_message.id'), nullable=False)
+    author_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content    = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    author = db.relationship('User', backref='wall_replies')
+
+    def __repr__(self):
+        return f'<PublicMessageReply Post:{self.post_id} by User:{self.author_id}>'
+
+
+# ── Education Content ─────────────────────────────────────────────────────────
+
+class EducationStatus(enum.Enum):
+    DRAFT    = 'draft'
+    PENDING  = 'pending'   # submitted by HCP, awaiting admin approval
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+
+
+class EducationContent(db.Model):
+    """Educational content — created by HCPs, approved and published by admin."""
+    id         = db.Column(db.Integer, primary_key=True)
+    title      = db.Column(db.String(255), nullable=False)
+    body       = db.Column(db.Text, nullable=False)
+    category   = db.Column(db.String(100))
+    author_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status     = db.Column(db.Enum(EducationStatus), default=EducationStatus.DRAFT, nullable=False)
+    approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    published_to_patients = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    author      = db.relationship('User', foreign_keys=[author_id], backref='education_posts')
+    approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+
+    def __repr__(self):
+        return f'<EducationContent {self.title[:30]} status:{self.status.value}>'
+
+
+# ── Broadcast Messages ────────────────────────────────────────────────────────
+
+class BroadcastMessage(db.Model):
+    """Admin broadcast — targets: 'all', 'patients', 'hcps', or 'user:<id>'."""
+    id         = db.Column(db.Integer, primary_key=True)
+    sender_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content    = db.Column(db.Text, nullable=False)
+    target     = db.Column(db.String(50), nullable=False, default='all')
+    target_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender      = db.relationship('User', foreign_keys=[sender_id], backref='broadcasts')
+    target_user = db.relationship('User', foreign_keys=[target_user_id])
+
+    def __repr__(self):
+        return f'<BroadcastMessage sender:{self.sender_id} target:{self.target}>'

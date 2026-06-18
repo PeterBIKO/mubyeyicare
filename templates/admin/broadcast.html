@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Broadcast Messages - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-bullhorn me-2"></i> Broadcast Messages</h2>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header bg-warning text-dark"><i class="fas fa-paper-plane me-2"></i> Send New Broadcast</div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('admin.broadcast') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Target Audience <span class="text-danger">*</span></label>
+                        <select class="form-select" name="target" id="targetSelect" onchange="toggleDM(this.value)">
+                            <option value="all">All Users</option>
+                            <option value="patients">All Patients</option>
+                            <option value="hcps">All HCPs</option>
+                            <option value="user">Specific User</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="specificUser" style="display:none;">
+                        <label class="form-label">Select User</label>
+                        <select class="form-select" name="target_user_id">
+                            <option value="">— Select —</option>
+                            {% for u in users %}
+                            <option value="{{ u.id }}">{{ u.get_full_name() }} ({{ u.role.value }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="content" rows="4" required placeholder="Type your broadcast message…"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100"><i class="fas fa-paper-plane me-1"></i> Send Broadcast</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7" data-aos="fade-up" data-aos-delay="60">
+        <div class="card">
+            <div class="card-header bg-primary text-white"><i class="fas fa-history me-2"></i> Sent Broadcasts</div>
+            <div class="card-body p-0" style="max-height:500px;overflow-y:auto;">
+                {% for b in broadcasts %}
+                <div class="p-3 {% if not loop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="badge bg-{{ 'secondary' if b.target == 'all' else 'primary' if b.target == 'patients' else 'success' if b.target == 'hcps' else 'info text-dark' }}">
+                            {{ b.target.capitalize() }}{% if b.target_user and b.target == 'user' %}: {{ b.target_user.get_full_name() }}{% endif %}
+                        </span>
+                        <small class="text-muted">{{ b.created_at.strftime('%b %d, %Y %H:%M') }}</small>
+                    </div>
+                    <p class="mb-0 small">{{ b.content }}</p>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted small">No broadcasts yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDM(val) {
+    document.getElementById('specificUser').style.display = val === 'user' ? '' : 'none';
+}
+</script>
+{% endblock %}

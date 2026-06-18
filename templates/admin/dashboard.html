@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-shield-halved me-2 text-primary"></i> Admin Dashboard</h2>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.broadcast') }}" class="btn btn-warning btn-sm"><i class="fas fa-bullhorn me-1"></i> Broadcast</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-1"></i> New User</a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    {% set cards = [
+        ('Total Patients',    stats.total_patients,       'fa-bed-pulse',    'stat-info',    url_for('admin.patients')),
+        ('Active Patients',   stats.active_patients,      'fa-heart-pulse',  'stat-success', url_for('admin.patients') ~ '?status=active'),
+        ('Total Users',       stats.total_users,          'fa-users',        'stat-warning', url_for('admin.users')),
+        ('Active Users',      stats.active_users,         'fa-user-check',   '',             url_for('admin.users')),
+        ('Pending Appts',     stats.pending_appointments, 'fa-calendar-clock','stat-warning', url_for('admin.appointments') ~ '?status=pending'),
+        ('Open Alerts',       stats.unresolved_alerts,    'fa-bell',         'stat-danger',  url_for('admin.reports')),
+        ('Pending Content',   stats.pending_education,    'fa-graduation-cap','',            url_for('admin.education') ~ '?status=pending'),
+        ('Follow-ups Done',   stats.completed_follow_ups, 'fa-calendar-check','stat-success',url_for('dashboard.analytics')),
+    ] %}
+    {% for label, val, icon, cls, href in cards %}
+    <div class="col-6 col-md-3" data-aos="fade-up">
+        <a href="{{ href }}" class="stat-card {{ cls }} stat-link text-decoration-none">
+            <div class="stat-icon"><i class="fas {{ icon }}"></i></div>
+            <div class="stat-number">{{ val }}</div>
+            <div class="stat-label">{{ label }}</div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-3">
+    <!-- Recent alerts -->
+    <div class="col-lg-4" data-aos="fade-up">
+        <div class="card h-100">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bell me-2"></i> Open Alerts</span>
+                <a href="{{ url_for('admin.reports') }}" class="btn btn-sm btn-light py-0">View all</a>
+            </div>
+            <div class="card-body p-0">
+                {% for a in recent_alerts %}
+                <div class="d-flex align-items-start gap-2 p-3 {% if not loop.last %}border-bottom{% endif %}">
+                    <span class="badge bg-{{ 'danger' if a.severity in ['High','Critical'] else 'warning text-dark' }} mt-1">{{ a.severity }}</span>
+                    <div class="flex-grow-1 small">
+                        <div class="fw-medium">{{ a.patient.get_full_name() }}</div>
+                        <div class="text-muted">{{ a.alert_type }} · {{ a.message | truncate(60) }}</div>
+                    </div>
+                    <form method="POST" action="{{ url_for('admin.assign_alert_hcp', alert_id=a.id) }}" class="d-flex gap-1">
+                        <select name="hcp_id" class="form-select form-select-sm" style="width:auto;font-size:.7rem;">
+                            <option value="">Assign HCP</option>
+                            {% for u in [] %}{% endfor %}{# populated via admin.patients route #}
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary py-0" type="submit"><i class="fas fa-check"></i></button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted small"><i class="fas fa-shield-check fa-2x d-block mb-2 opacity-25 text-success"></i>No open alerts</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent appointment requests -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="60">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-calendar-clock me-2"></i> Appointment Requests</span>
+                <a href="{{ url_for('admin.appointments') }}" class="btn btn-sm btn-dark py-0">Manage</a>
+            </div>
+            <div class="card-body p-0">
+                {% for appt in recent_appointments %}
+                <div class="p-3 {% if not loop.last %}border-bottom{% endif %} small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-medium">{{ appt.patient.get_full_name() }}</span>
+                        <span class="badge bg-{{ 'warning text-dark' if appt.status.value == 'pending' else 'success' if appt.status.value == 'approved' else 'danger' if appt.status.value == 'rejected' else 'info' }}">
+                            {{ appt.status.value.capitalize() }}
+                        </span>
+                    </div>
+                    <div class="text-muted">{{ appt.preferred_date.strftime('%b %d, %Y %H:%M') }}</div>
+                    {% if appt.reason %}<div class="text-muted fst-italic">"{{ appt.reason | truncate(50) }}"</div>{% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted small">No appointment requests</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent broadcasts -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="120">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bullhorn me-2"></i> Recent Broadcasts</span>
+                <a href="{{ url_for('admin.broadcast') }}" class="btn btn-sm btn-light py-0">Send</a>
+            </div>
+            <div class="card-body p-0">
+                {% for b in broadcasts %}
+                <div class="p-3 {% if not loop.last %}border-bottom{% endif %} small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="badge bg-secondary">{{ b.target.capitalize() }}</span>
+                        <span class="text-muted">{{ b.created_at.strftime('%b %d') }}</span>
+                    </div>
+                    <p class="mb-0">{{ b.content | truncate(80) }}</p>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted small">No broadcasts yet</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

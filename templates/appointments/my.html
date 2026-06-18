@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}My Appointments - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-calendar-check me-2"></i> My Appointments</h2>
+    <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i> New Request
+    </a>
+</div>
+
+{% if appointments %}
+<div class="row g-3">
+    {% for a in appointments %}
+    <div class="col-12 col-md-6" data-aos="fade-up">
+        <div class="card h-100 border-{{ 'warning' if a.status.value == 'pending' else 'success' if a.status.value == 'approved' else 'danger' if a.status.value == 'rejected' else 'info' }}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fas fa-calendar me-1 text-primary"></i>
+                        {{ a.preferred_date.strftime('%B %d, %Y at %H:%M') }}
+                    </h6>
+                    <span class="badge bg-{{
+                        'warning text-dark' if a.status.value == 'pending' else
+                        'success' if a.status.value == 'approved' else
+                        'danger' if a.status.value == 'rejected' else 'info text-dark'
+                    }}">{{ a.status.value.capitalize() }}</span>
+                </div>
+
+                {% if a.reason %}
+                <p class="small text-muted mb-2"><i class="fas fa-quote-left me-1"></i>{{ a.reason }}</p>
+                {% endif %}
+
+                {% if a.status.value == 'approved' and a.scheduled_date %}
+                <div class="alert alert-success py-1 px-2 small mb-2">
+                    <i class="fas fa-calendar-check me-1"></i>
+                    Confirmed for: <strong>{{ a.scheduled_date.strftime('%B %d, %Y at %H:%M') }}</strong>
+                </div>
+                {% endif %}
+
+                {% if a.status.value == 'rescheduled' and a.scheduled_date %}
+                <div class="alert alert-info py-1 px-2 small mb-2">
+                    <i class="fas fa-rotate me-1"></i>
+                    Rescheduled to: <strong>{{ a.scheduled_date.strftime('%B %d, %Y at %H:%M') }}</strong>
+                </div>
+                {% endif %}
+
+                {% if a.assigned_hcp %}
+                <div class="small text-muted mb-2">
+                    <i class="fas fa-user-doctor me-1"></i>
+                    HCP: <strong>{{ a.assigned_hcp.get_full_name() }}</strong>
+                </div>
+                {% endif %}
+
+                {% if a.admin_notes %}
+                <div class="small text-muted fst-italic">
+                    <i class="fas fa-comment-dots me-1"></i>"{{ a.admin_notes }}"
+                </div>
+                {% endif %}
+
+                <div class="text-muted small mt-2">
+                    <i class="fas fa-clock me-1"></i> Requested {{ a.created_at.strftime('%b %d, %Y') }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" data-aos="fade-up">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-calendar-plus fa-3x d-block mb-3 opacity-25"></i>
+        <p class="mb-1 fw-medium">No appointment requests yet</p>
+        <p class="small mb-3">Submit a request and your care team will confirm the appointment.</p>
+        <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Request Appointment
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

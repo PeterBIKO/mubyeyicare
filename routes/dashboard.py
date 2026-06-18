@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import or_, func
-from models import db, User, Patient, FollowUp, WoundAssessment, Alert, UserRole, VitalSigns
+from models import db, User, Patient, FollowUp, WoundAssessment, Alert, UserRole, VitalSigns, AppointmentRequest, AppointmentStatus, EducationContent, EducationStatus
 from datetime import datetime, timedelta, timezone
 
 health_education_topics = [
@@ -138,12 +138,24 @@ def patient_dashboard():
 
     primary_doctor = User.query.get(patient.primary_doctor_id) if patient.primary_doctor_id else None
 
+    pending_appointments = (AppointmentRequest.query
+                            .filter_by(patient_id=patient.id)
+                            .order_by(AppointmentRequest.created_at.desc())
+                            .limit(3).all())
+
+    education_articles = (EducationContent.query
+                          .filter_by(status=EducationStatus.APPROVED, published_to_patients=True)
+                          .order_by(EducationContent.created_at.desc())
+                          .limit(4).all())
+
     return render_template('dashboard/patient_dashboard.html',
                            patient=patient,
                            recent_vitals=recent_vitals,
                            alerts=alerts,
                            recent_assessments=recent_assessments,
-                           primary_doctor=primary_doctor)
+                           primary_doctor=primary_doctor,
+                           pending_appointments=pending_appointments,
+                           education_articles=education_articles)
 
 @dashboard_bp.route('/health-education')
 @login_required

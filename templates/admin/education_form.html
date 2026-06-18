@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if content else 'Add' }} Education Content - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-graduation-cap me-2"></i> {{ 'Edit' if content else 'New' }} Education Content</h2>
+    <a href="{{ url_for('admin.education') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header bg-primary text-white"><i class="fas fa-pen me-2"></i> Content Details</div>
+            <div class="card-body p-4">
+                <form method="POST"
+                      action="{{ url_for('admin.edit_education', content_id=content.id) if content else url_for('admin.create_education') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" required
+                               value="{{ content.title if content else '' }}" placeholder="e.g. Wound Care After C-Section">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <input type="text" class="form-control" name="category"
+                                   value="{{ content.category if content else '' }}"
+                                   placeholder="e.g. Wound Care, Nutrition, Pain Management">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check p-3 border rounded-3 w-100" style="padding-left:2rem !important;">
+                                <input class="form-check-input" type="checkbox" id="publish" name="publish"
+                                       {{ 'checked' if content and content.published_to_patients }}>
+                                <label class="form-check-label fw-medium" for="publish">
+                                    <i class="fas fa-eye text-success me-1"></i> Publish to Patient Dashboard
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Content Body <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="body" rows="10" required
+                                  placeholder="Write the educational content here…">{{ content.body if content else '' }}</textarea>
+                    </div>
+                    <hr class="my-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-1"></i> {{ 'Save Changes' if content else 'Create Content' }}
+                        </button>
+                        <a href="{{ url_for('admin.education') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

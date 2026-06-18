@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Public Wall - MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+.wall-post { border-radius: 14px; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+.wall-post .post-header { display:flex; align-items:center; gap:.75rem; }
+.wall-avatar { width:44px; height:44px; border-radius:50%; background:var(--primary-color);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:1rem; flex-shrink:0; }
+.reply-box { background:#f7fafc; border-radius:10px; padding:.75rem 1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-comments-dollar me-2"></i> Public Message Wall</h2>
+</div>
+
+<div class="row g-3">
+    <!-- Compose -->
+    <div class="col-12" data-aos="fade-up">
+        <div class="card wall-post mb-1">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('wall.index') }}" enctype="multipart/form-data">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="wall-avatar">{{ current_user.first_name[0] | upper }}{{ current_user.last_name[0] | upper }}</div>
+                        <div class="flex-grow-1">
+                            <textarea class="form-control mb-2" name="content" rows="2"
+                                      placeholder="Share a message, tip, or question with the community…"></textarea>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <label class="input-group w-auto" style="max-width:260px;">
+                                    <span class="input-group-text btn btn-sm btn-outline-secondary py-1">
+                                        <i class="fas fa-image me-1"></i> Image/Video
+                                    </span>
+                                    <input type="file" class="d-none" name="attachment" accept="image/*,video/*">
+                                </label>
+                                <button type="submit" class="btn btn-primary btn-sm ms-auto">
+                                    <i class="fas fa-paper-plane me-1"></i> Post
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts -->
+    {% for post in posts %}
+    <div class="col-12" data-aos="fade-up">
+        <div class="card wall-post">
+            <div class="card-body">
+                <div class="post-header mb-2">
+                    <div class="wall-avatar" style="background:{{ '#1e3a5f' if post.author.role.value in ['doctor','nurse','chw','admin'] else '#5a67d8' }}">
+                        {{ post.author.first_name[0] | upper }}{{ post.author.last_name[0] | upper }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ post.author.get_full_name() }}</div>
+                        <div class="small text-muted">
+                            <span class="badge bg-{{
+                                'danger' if post.author.role.value == 'admin' else
+                                'primary' if post.author.role.value in ['doctor','nurse','chw'] else
+                                'secondary'
+                            }} me-1">{{ post.author.role.value.capitalize() }}</span>
+                            {{ post.created_at.strftime('%b %d, %Y %H:%M') }}
+                        </div>
+                    </div>
+                    {% if post.author_id == current_user.id or current_user.role.value == 'admin' %}
+                    <form method="POST" action="{{ url_for('wall.delete_post', post_id=post.id) }}"
+                          class="ms-auto" onsubmit="return confirm('Remove this post?')">
+                        <button class="btn btn-sm btn-outline-danger py-0" title="Delete"><i class="fas fa-trash"></i></button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <p class="mb-2">{{ post.content }}</p>
+
+                {% if post.attachment_url %}
+                    {% if post.attachment_type and post.attachment_type.startswith('image') %}
+                    <img src="{{ post.attachment_url }}" class="img-fluid rounded mb-2" style="max-height:320px;">
+                    {% elif post.attachment_type and post.attachment_type.startswith('video') %}
+                    <video controls class="w-100 rounded mb-2" style="max-height:320px;">
+                        <source src="{{ post.attachment_url }}" type="{{ post.attachment_type }}">
+                    </video>
+                    {% endif %}
+                {% endif %}
+
+                <!-- Replies -->
+                {% set replies = post.replies.all() %}
+                {% if replies %}
+                <div class="mt-3 ps-3 border-start border-2 border-primary-subtle">
+                    {% for r in replies %}
+                    <div class="reply-box mb-2">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div class="wall-avatar" style="width:30px;height:30px;font-size:.75rem;background:#718096;">
+                                {{ r.author.first_name[0] | upper }}{{ r.author.last_name[0] | upper }}
+                            </div>
+                            <span class="fw-medium small">{{ r.author.get_full_name() }}</span>
+                            <span class="text-muted small ms-auto">{{ r.created_at.strftime('%b %d %H:%M') }}</span>
+                        </div>
+                        <p class="mb-0 small ps-5">{{ r.content }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Reply form -->
+                <form method="POST" action="{{ url_for('wall.reply', post_id=post.id) }}" class="mt-2">
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" name="content" placeholder="Write a reply…">
+                        <button type="submit" class="btn btn-outline-primary"><i class="fas fa-reply me-1"></i>Reply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12" data-aos="fade-up">
+        <div class="card">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="fas fa-comments fa-3x d-block mb-3 opacity-25"></i>
+                <p class="mb-1 fw-medium">No posts yet</p>
+                <p class="small">Be the first to share something with the community.</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

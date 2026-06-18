@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Chat: {{ patient.get_full_name() }} - MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+.msg-bubble{max-width:75%;padding:.6rem 1rem;border-radius:14px;font-size:.9rem;}
+.msg-bubble.patient{background:#e8f4fd;border-bottom-left-radius:4px;}
+.msg-bubble.provider{background:#1e3a5f;color:#fff;border-bottom-right-radius:4px;}
+.msg-meta{font-size:.72rem;opacity:.7;margin-top:.25rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-comments me-2"></i> Chat: {{ patient.get_full_name() }}</h2>
+    <a href="{{ url_for('admin.chat_monitor') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back</a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white small">
+                <i class="fas fa-lock me-1"></i> Private conversation — read-only admin view
+                &nbsp;·&nbsp; MRN: {{ patient.mrn }}
+            </div>
+            <div class="card-body p-3" style="max-height:70vh;overflow-y:auto;">
+                {% if messages %}
+                    {% for m in messages %}
+                    {% set is_patient = m.sender_role in ['patient','mother'] %}
+                    <div class="mb-3 d-flex {{ 'justify-content-start' if is_patient else 'justify-content-end' }}">
+                        <div>
+                            <div class="msg-bubble {{ 'patient' if is_patient else 'provider' }}">
+                                {% if m.content %}<p class="mb-0">{{ m.content }}</p>{% endif %}
+                                {% if m.attachment_url %}
+                                    {% if m.attachment_type and m.attachment_type.startswith('image') %}
+                                        <img src="{{ m.attachment_url }}" class="img-fluid rounded mt-1" style="max-width:240px;">
+                                    {% else %}
+                                        <a href="{{ m.attachment_url }}" target="_blank" class="{{ 'text-primary' if is_patient else 'text-white' }}">
+                                            <i class="fas fa-paperclip me-1"></i>{{ m.attachment_filename or 'File' }}
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="msg-meta {{ 'text-start' if is_patient else 'text-end' }}">
+                                {{ m.sender.get_full_name() if m.sender else m.sender_role }} ({{ m.sender_role }})
+                                &middot; {{ m.created_at.strftime('%b %d %H:%M') }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-comments fa-2x d-block mb-2 opacity-25"></i>No messages yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white"><i class="fas fa-id-card me-2"></i> Patient Info</div>
+            <div class="card-body small">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-1 border-bottom"><span class="text-muted">Name</span><br><strong>{{ patient.get_full_name() }}</strong></li>
+                    <li class="py-1 border-bottom"><span class="text-muted">MRN</span><br><code>{{ patient.mrn }}</code></li>
+                    <li class="py-1 border-bottom"><span class="text-muted">Phone</span><br>{{ patient.phone }}</li>
+                    <li class="py-1 border-bottom"><span class="text-muted">Primary HCP</span><br>{{ patient.primary_doctor.get_full_name() }}</li>
+                    <li class="py-1"><span class="text-muted">Messages</span><br><strong>{{ messages | length }}</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

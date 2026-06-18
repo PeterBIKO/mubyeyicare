@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}User Management - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-users-gear me-2"></i> User Management</h2>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-1"></i> Register User</a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3" data-aos="fade-up">
+    <div class="card-body py-2">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="q" value="{{ q }}" placeholder="Search name, username, email…">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select form-select-sm" name="role">
+                    <option value="">All Roles</option>
+                    {% for r in roles %}<option value="{{ r.value }}" {{ 'selected' if role_filter == r.value }}>{{ r.value.capitalize() }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-secondary ms-1">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card" data-aos="fade-up">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th><th>Username</th><th>Email</th><th>Role</th>
+                        <th>Status</th><th>Joined</th><th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="fw-medium">{{ u.get_full_name() }}</td>
+                        <td><code>{{ u.username }}</code></td>
+                        <td class="small text-muted">{{ u.email }}</td>
+                        <td>
+                            <span class="badge bg-{{
+                                'danger' if u.role.value == 'admin' else
+                                'primary' if u.role.value == 'doctor' else
+                                'info text-dark' if u.role.value == 'nurse' else
+                                'success' if u.role.value == 'chw' else
+                                'secondary'
+                            }}">{{ u.role.value.capitalize() }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if u.is_active else 'secondary' }}">
+                                {{ 'Active' if u.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td class="small text-muted">{{ u.created_at.strftime('%b %d, %Y') }}</td>
+                        <td class="text-end">
+                            <div class="d-flex gap-1 justify-content-end">
+                                <a href="{{ url_for('admin.edit_user', user_id=u.id) }}"
+                                   class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-pen"></i></a>
+                                <form method="POST" action="{{ url_for('admin.toggle_user_active', user_id=u.id) }}" class="d-inline">
+                                    <button class="btn btn-sm btn-outline-{{ 'secondary' if u.is_active else 'success' }}" title="{{ 'Deactivate' if u.is_active else 'Activate' }}">
+                                        <i class="fas fa-{{ 'ban' if u.is_active else 'check' }}"></i>
+                                    </button>
+                                </form>
+                                {% if u.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=u.id) }}" class="d-inline"
+                                      onsubmit="return confirm('Delete {{ u.username }}? This cannot be undone.')">
+                                    <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

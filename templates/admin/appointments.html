@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Appointment Management - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-calendar-days me-2"></i> Appointment Management</h2>
+</div>
+
+<!-- Filter bar -->
+<div class="card mb-3" data-aos="fade-up">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap">
+            <select class="form-select form-select-sm" name="status" style="width:auto;">
+                <option value="">All Statuses</option>
+                {% for s in statuses %}
+                <option value="{{ s.value }}" {{ 'selected' if status_filter == s.value }}>{{ s.value.capitalize() }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+            <a href="{{ url_for('admin.appointments') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+
+<div class="card" data-aos="fade-up">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Patient</th><th>Preferred Date</th><th>Reason</th><th>Status</th><th>Assigned HCP</th><th class="text-end">Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in appointments %}
+                    <tr>
+                        <td class="fw-medium">{{ a.patient.get_full_name() }}<br><small class="text-muted">{{ a.patient.mrn }}</small></td>
+                        <td class="small">{{ a.preferred_date.strftime('%b %d, %Y %H:%M') }}</td>
+                        <td class="small text-muted">{{ a.reason | truncate(50) if a.reason else '—' }}</td>
+                        <td>
+                            <span class="badge bg-{{
+                                'warning text-dark' if a.status.value == 'pending' else
+                                'success' if a.status.value == 'approved' else
+                                'danger' if a.status.value == 'rejected' else 'info text-dark'
+                            }}">{{ a.status.value.capitalize() }}</span>
+                        </td>
+                        <td class="small">{{ a.assigned_hcp.get_full_name() if a.assigned_hcp else '—' }}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal" data-bs-target="#actionModal{{ a.id }}">
+                                <i class="fas fa-pen me-1"></i>Manage
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Action modal -->
+                    <div class="modal fade" id="actionModal{{ a.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Manage Appointment — {{ a.patient.get_full_name() }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('admin.appointment_action', appt_id=a.id) }}">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Action</label>
+                                            <select class="form-select" name="action" required>
+                                                <option value="approve">Approve</option>
+                                                <option value="reject">Reject</option>
+                                                <option value="reschedule">Reschedule</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Scheduled Date/Time <small class="text-muted">(for reschedule)</small></label>
+                                            <input type="datetime-local" class="form-control" name="scheduled_date"
+                                                   value="{{ a.scheduled_date.strftime('%Y-%m-%dT%H:%M') if a.scheduled_date else '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Assign HCP</label>
+                                            <select class="form-select" name="hcp_id">
+                                                <option value="">— Keep current —</option>
+                                                {% for h in hcps %}
+                                                <option value="{{ h.id }}" {{ 'selected' if a.assigned_hcp_id == h.id }}>
+                                                    {{ h.get_full_name() }} ({{ h.role.value }})
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Admin Notes</label>
+                                            <textarea class="form-control" name="admin_notes" rows="2">{{ a.admin_notes or '' }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary">Save</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No appointment requests.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

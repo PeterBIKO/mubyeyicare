@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Reports & Analytics - MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-chart-pie me-2"></i> Reports &amp; Analytics</h2>
+</div>
+
+<!-- KPI row -->
+<div class="row g-3 mb-4">
+    {% for label, val, icon, cls in [
+        ('Infection Rate',         infection_rate | string ~ '%', 'fa-biohazard',        'stat-danger'),
+        ('Total Assessments',      total_assessments,              'fa-clipboard-list',   'stat-info'),
+        ('Follow-ups Completed',   completed_fu,                   'fa-calendar-check',   'stat-success'),
+        ('Follow-ups Missed',      missed_fu,                      'fa-calendar-xmark',   'stat-warning'),
+        ('Patient Messages',       patient_msgs,                   'fa-comment',          ''),
+        ('HCP Messages',           hcp_msgs,                       'fa-stethoscope',      'stat-info'),
+    ] %}
+    <div class="col-6 col-md-2" data-aos="fade-up">
+        <div class="stat-card {{ cls }}">
+            <div class="stat-icon"><i class="fas {{ icon }}"></i></div>
+            <div class="stat-number">{{ val }}</div>
+            <div class="stat-label">{{ label }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-3">
+    <!-- Wound status distribution -->
+    <div class="col-lg-4" data-aos="fade-up">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white"><i class="fas fa-chart-pie me-2"></i> Wound Status Distribution</div>
+            <div class="card-body"><canvas id="woundChart" height="220"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Follow-up completion -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="60">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white"><i class="fas fa-chart-donut me-2"></i> Follow-up Completion</div>
+            <div class="card-body"><canvas id="followupChart" height="220"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Patient registrations -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="120">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark"><i class="fas fa-chart-line me-2"></i> New Patients (6 months)</div>
+            <div class="card-body"><canvas id="monthlyChart" height="220"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Message activity by role -->
+    <div class="col-lg-6" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header bg-info text-dark"><i class="fas fa-comments me-2"></i> Messaging Activity by Role</div>
+            <div class="card-body">
+                <canvas id="msgChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wound detail table -->
+    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="60">
+        <div class="card">
+            <div class="card-header bg-secondary text-white"><i class="fas fa-table me-2"></i> Wound Assessment Breakdown</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead class="table-light"><tr><th>Status</th><th>Count</th><th>Share</th></tr></thead>
+                    <tbody>
+                    {% for ws, cnt in wound_stats.items() %}
+                    <tr>
+                        <td><span class="badge bg-{{ 'success' if ws == 'excellent' else 'primary' if ws == 'good' else 'warning text-dark' if ws == 'fair' else 'danger' }}">{{ ws.capitalize() }}</span></td>
+                        <td>{{ cnt }}</td>
+                        <td>
+                            {% if total_assessments %}
+                            <div class="progress" style="height:10px;">
+                                <div class="progress-bar" style="width:{{ (cnt/total_assessments*100)|round(1) }}%"></div>
+                            </div>
+                            <small>{{ (cnt/total_assessments*100)|round(1) }}%</small>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const woundData   = {{ wound_stats | tojson }};
+const monthlyData = {{ monthly | tojson }};
+const msgData     = {{ msg_by_role | tojson }};
+
+new Chart(document.getElementById('woundChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(woundData).map(k => k.charAt(0).toUpperCase()+k.slice(1)),
+        datasets: [{ data: Object.values(woundData),
+            backgroundColor: ['#28a745','#0d6efd','#ffc107','#dc3545','#6c757d'] }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+});
+
+new Chart(document.getElementById('followupChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Completed', 'Missed'],
+        datasets: [{ data: [{{ completed_fu }}, {{ missed_fu }}],
+            backgroundColor: ['#28a745','#ffc107'] }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+});
+
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+        labels: monthlyData.map(m => m.month),
+        datasets: [{ label: 'New Patients', data: monthlyData.map(m => m.count),
+            backgroundColor: '#0d6efd99', borderColor: '#0d6efd', borderWidth: 1 }]
+    },
+    options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+               plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('msgChart'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(msgData).map(k => k.charAt(0).toUpperCase()+k.slice(1)),
+        datasets: [{ label: 'Messages', data: Object.values(msgData),
+            backgroundColor: '#17a2b899' }]
+    },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } },
+               scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+});
+</script>
+{% endblock %}

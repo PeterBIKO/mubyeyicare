@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Appointment Requests - MubyeyiCare{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-calendar-days me-2"></i> Appointment Requests</h2>
+</div>
+
+<div class="card mb-3" data-aos="fade-up">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 flex-wrap align-items-center">
+            <select class="form-select form-select-sm" name="status" style="width:auto;">
+                <option value="">All Statuses</option>
+                {% for s in statuses %}
+                <option value="{{ s.value }}" {{ 'selected' if status_filter == s.value }}>{{ s.value.capitalize() }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-filter me-1"></i>Filter</button>
+            <a href="{{ url_for('appointments.list_all') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+
+<div class="card" data-aos="fade-up">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Patient</th><th>Preferred Date</th><th>Reason</th><th>Status</th><th>Assigned HCP</th><th>Requested</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in appointments %}
+                    <tr>
+                        <td class="fw-medium">
+                            <a href="{{ url_for('patients.view_patient', patient_id=a.patient.id) }}" class="text-decoration-none">
+                                {{ a.patient.get_full_name() }}
+                            </a>
+                            <br><small class="text-muted">{{ a.patient.mrn }}</small>
+                        </td>
+                        <td class="small">{{ a.preferred_date.strftime('%b %d, %Y %H:%M') }}
+                            {% if a.scheduled_date and a.status.value in ['approved','rescheduled'] %}
+                            <br><span class="text-success small"><i class="fas fa-check me-1"></i>{{ a.scheduled_date.strftime('%b %d %H:%M') }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ a.reason | truncate(50) if a.reason else '—' }}</td>
+                        <td>
+                            <span class="badge bg-{{
+                                'warning text-dark' if a.status.value == 'pending' else
+                                'success' if a.status.value == 'approved' else
+                                'danger' if a.status.value == 'rejected' else 'info text-dark'
+                            }}">{{ a.status.value.capitalize() }}</span>
+                        </td>
+                        <td class="small">{{ a.assigned_hcp.get_full_name() if a.assigned_hcp else '—' }}</td>
+                        <td class="small text-muted">{{ a.created_at.strftime('%b %d, %Y') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No appointment requests.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

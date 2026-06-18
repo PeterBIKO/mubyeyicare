@@ -317,4 +317,90 @@
     </div>
 
 </div>
+
+<!-- ── Row 2: Appointments + Education ── -->
+<div class="row g-3 mt-1">
+
+    <!-- Appointment Status -->
+    <div class="col-12 col-md-6" data-aos="fade-up">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-calendar-check me-2"></i> My Appointments</span>
+                <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-sm btn-dark py-0">
+                    <i class="fas fa-plus me-1"></i> New
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if pending_appointments %}
+                    {% for a in pending_appointments %}
+                    <div class="p-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="small fw-medium">{{ a.preferred_date.strftime('%b %d, %Y %H:%M') }}</span>
+                            <span class="badge bg-{{
+                                'warning text-dark' if a.status.value == 'pending' else
+                                'success' if a.status.value == 'approved' else
+                                'danger' if a.status.value == 'rejected' else 'info text-dark'
+                            }}">{{ a.status.value.capitalize() }}</span>
+                        </div>
+                        {% if a.scheduled_date and a.status.value in ['approved','rescheduled'] %}
+                        <div class="small text-success"><i class="fas fa-check me-1"></i>Confirmed: {{ a.scheduled_date.strftime('%b %d %H:%M') }}</div>
+                        {% endif %}
+                        {% if a.assigned_hcp %}
+                        <div class="small text-muted"><i class="fas fa-user-doctor me-1"></i>{{ a.assigned_hcp.get_full_name() }}</div>
+                        {% endif %}
+                        {% if a.reason %}
+                        <div class="small text-muted fst-italic">"{{ a.reason | truncate(60) }}"</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-calendar fa-2x d-block mb-2 opacity-25"></i>
+                    <p class="small mb-2">No appointment requests yet.</p>
+                    <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-plus me-1"></i> Request Appointment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% if pending_appointments %}
+            <div class="card-footer bg-transparent border-top py-2 text-center">
+                <a href="{{ url_for('appointments.my_appointments') }}" class="btn btn-sm btn-outline-warning">
+                    View all appointments
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Education articles (admin-published) -->
+    <div class="col-12 col-md-6" data-aos="fade-up" data-aos-delay="60">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white d-flex align-items-center justify-content-between">
+                <span><i class="fas fa-book-medical me-2"></i> Wound Care Guides</span>
+                <a href="{{ url_for('dashboard.health_education') }}" class="btn btn-sm btn-light py-0 text-success">All guides</a>
+            </div>
+            <div class="card-body p-0">
+                {% if education_articles %}
+                    {% for ec in education_articles %}
+                    <div class="p-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="fw-medium small">{{ ec.title }}</div>
+                        {% if ec.category %}
+                        <span class="badge bg-light text-muted border small">{{ ec.category }}</span>
+                        {% endif %}
+                        <p class="mb-0 small text-muted mt-1">{{ ec.body | truncate(100) }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-book-open fa-2x d-block mb-2 opacity-25"></i>
+                    <p class="small mb-0">No published guides yet.</p>
+                    <a href="{{ url_for('dashboard.health_education') }}" class="btn btn-sm btn-outline-success mt-2">View standard guides</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
 {% endblock %}

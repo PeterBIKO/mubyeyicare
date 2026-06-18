@@ -33,6 +33,9 @@ def create_app(config_name=None):
     from routes.follow_ups import follow_ups_bp
     from routes.assessments import assessments_bp
     from routes.chat import chat_bp
+    from routes.admin import admin_bp
+    from routes.appointments import appointments_bp
+    from routes.wall import wall_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -40,6 +43,9 @@ def create_app(config_name=None):
     app.register_blueprint(follow_ups_bp)
     app.register_blueprint(assessments_bp)
     app.register_blueprint(chat_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(appointments_bp)
+    app.register_blueprint(wall_bp)
 
     @app.route('/')
     def home():
@@ -81,6 +87,14 @@ def create_app(config_name=None):
             if "location" not in existing_user:
                 with db.engine.connect() as conn:
                     conn.execute(text("ALTER TABLE user ADD COLUMN location VARCHAR(200)"))
+                    conn.commit()
+
+        # alert table: assigned_hcp_id
+        if "alert" in inspector.get_table_names():
+            existing_alert = {col["name"] for col in inspector.get_columns("alert")}
+            if "assigned_hcp_id" not in existing_alert:
+                with db.engine.connect() as conn:
+                    conn.execute(text("ALTER TABLE alert ADD COLUMN assigned_hcp_id INTEGER REFERENCES user(id)"))
                     conn.commit()
     
     return app
