@@ -12,8 +12,9 @@ patients_bp = Blueprint('patients', __name__, url_prefix='/patients')
 @doctor_nurse_required
 def list_patients():
     """List all patients"""
-    page = request.args.get('page', 1, type=int)
+    page   = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
+    status = request.args.get('status', '')   # 'active' | 'discharged' | ''
 
     query = Patient.query
 
@@ -25,21 +26,24 @@ def list_patients():
             (Patient.email.ilike(f'%{search}%'))
         )
 
+    # Status filter
+    if status == 'discharged':
+        query = query.filter_by(is_active=False)
+    elif status == 'active':
+        query = query.filter_by(is_active=True)
+
     if current_user.role == UserRole.ADMIN:
         pass  # admin sees all
     elif current_user.role == UserRole.CHW:
-        # CHW sees only patients in their assigned location
         if current_user.location:
             query = query.filter(Patient.location == current_user.location)
         else:
-            # CHW has no location assigned yet — show nothing
             query = query.filter(Patient.id == -1)
     else:
-        # Doctor / Nurse: patients they are primary doctor for
         query = query.filter_by(primary_doctor_id=current_user.id)
 
     patients = query.paginate(page=page, per_page=10)
-    return render_template('patients/list.html', patients=patients, search=search)
+    return render_template('patients/list.html', patients=patients, search=search, status=status)
 
 @patients_bp.route('/create', methods=['GET', 'POST'])
 @login_required
