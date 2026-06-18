@@ -66,6 +66,31 @@ def create_app(config_name=None):
         else:
             unread = 0
         return {'unread_notifications': unread}
+
+    # ── Language / i18n ─────────────────────────────────────────────────────
+    @app.route('/set-lang/<lang_code>', methods=['POST', 'GET'])
+    def set_lang(lang_code):
+        from flask import session, request as req
+        if lang_code in ('en', 'rw'):
+            session['lang'] = lang_code
+        next_url = req.args.get('next') or req.referrer or '/'
+        from flask import redirect
+        return redirect(next_url)
+
+    @app.context_processor
+    def inject_language():
+        from flask import session
+        from translations.rw import KINYARWANDA
+
+        lang = session.get('lang', 'en')
+
+        def tr(text):
+            """Return translated string if Kinyarwanda is active, else original."""
+            if lang == 'rw':
+                return KINYARWANDA.get(text, text)
+            return text
+
+        return {'tr': tr, 'current_lang': lang}
     
     # Create database tables and apply schema upgrades
     with app.app_context():

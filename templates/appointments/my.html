@@ -1,81 +1,256 @@
 {% extends "base.html" %}
-{% block title %}My Appointments - MubyeyiCare{% endblock %}
+{% block title %}{{ tr('My Appointments') }} – MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Status banner strips ──────────────────────────────────── */
+.appt-card { border-radius: .9rem; overflow: hidden; border: none; box-shadow: 0 2px 14px rgba(0,0,0,.08); }
+
+.status-banner {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .85rem 1.25rem; font-weight: 700; font-size: .95rem;
+}
+.status-banner i { font-size: 1.3rem; }
+
+.banner-pending    { background: #fef9c3; color: #854d0e; border-bottom: 2px solid #f59e0b; }
+.banner-approved   { background: #dcfce7; color: #166534; border-bottom: 2px solid #22c55e; }
+.banner-rejected   { background: #fee2e2; color: #991b1b; border-bottom: 2px solid #ef4444; }
+.banner-rescheduled{ background: #dbeafe; color: #1e40af; border-bottom: 2px solid #3b82f6; }
+
+/* ── Detail rows ───────────────────────────────────────────── */
+.detail-row { display:flex; align-items:flex-start; gap:.65rem; padding:.45rem 0; border-bottom:1px solid #f1f5f9; font-size:.875rem; }
+.detail-row:last-child { border-bottom: none; }
+.detail-row .lbl { min-width:110px; color:#64748b; font-weight:500; flex-shrink:0; }
+.detail-row .val { color:#1e293b; }
+
+/* ── Timeline dot ─────────────────────────────────────────── */
+.timeline-dot {
+    width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-top:4px;
+}
+.dot-pending      { background:#f59e0b; }
+.dot-approved     { background:#22c55e; }
+.dot-rejected     { background:#ef4444; }
+.dot-rescheduled  { background:#3b82f6; }
+
+/* ── "New" pulse badge ─────────────────────────────────────── */
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
+.new-badge { animation: pulse 1.5s infinite; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-calendar-check me-2"></i> My Appointments</h2>
+    <div>
+        <h2><i class="fas fa-calendar-check me-2"></i> {{ tr('My Appointments') }}</h2>
+        <p class="text-muted small mb-0">{{ tr('Track the status of all your appointment requests here.') }}</p>
+    </div>
     <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus me-1"></i> New Request
+        <i class="fas fa-plus me-1"></i> {{ tr('New Request') }}
     </a>
 </div>
 
 {% if appointments %}
-<div class="row g-3">
-    {% for a in appointments %}
-    <div class="col-12 col-md-6" data-aos="fade-up">
-        <div class="card h-100 border-{{ 'warning' if a.status.value == 'pending' else 'success' if a.status.value == 'approved' else 'danger' if a.status.value == 'rejected' else 'info' }}">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="fw-bold mb-0">
-                        <i class="fas fa-calendar me-1 text-primary"></i>
-                        {{ a.preferred_date.strftime('%B %d, %Y at %H:%M') }}
-                    </h6>
-                    <span class="badge bg-{{
-                        'warning text-dark' if a.status.value == 'pending' else
-                        'success' if a.status.value == 'approved' else
-                        'danger' if a.status.value == 'rejected' else 'info text-dark'
-                    }}">{{ a.status.value.capitalize() }}</span>
-                </div>
 
-                {% if a.reason %}
-                <p class="small text-muted mb-2"><i class="fas fa-quote-left me-1"></i>{{ a.reason }}</p>
-                {% endif %}
+<!-- ── Summary strip ──────────────────────────────────────── -->
+{% set pending_n    = appointments | selectattr('status.value','equalto','pending')     | list | length %}
+{% set approved_n   = appointments | selectattr('status.value','equalto','approved')    | list | length %}
+{% set rejected_n   = appointments | selectattr('status.value','equalto','rejected')    | list | length %}
+{% set reschedule_n = appointments | selectattr('status.value','equalto','rescheduled') | list | length %}
 
-                {% if a.status.value == 'approved' and a.scheduled_date %}
-                <div class="alert alert-success py-1 px-2 small mb-2">
-                    <i class="fas fa-calendar-check me-1"></i>
-                    Confirmed for: <strong>{{ a.scheduled_date.strftime('%B %d, %Y at %H:%M') }}</strong>
-                </div>
-                {% endif %}
-
-                {% if a.status.value == 'rescheduled' and a.scheduled_date %}
-                <div class="alert alert-info py-1 px-2 small mb-2">
-                    <i class="fas fa-rotate me-1"></i>
-                    Rescheduled to: <strong>{{ a.scheduled_date.strftime('%B %d, %Y at %H:%M') }}</strong>
-                </div>
-                {% endif %}
-
-                {% if a.assigned_hcp %}
-                <div class="small text-muted mb-2">
-                    <i class="fas fa-user-doctor me-1"></i>
-                    HCP: <strong>{{ a.assigned_hcp.get_full_name() }}</strong>
-                </div>
-                {% endif %}
-
-                {% if a.admin_notes %}
-                <div class="small text-muted fst-italic">
-                    <i class="fas fa-comment-dots me-1"></i>"{{ a.admin_notes }}"
-                </div>
-                {% endif %}
-
-                <div class="text-muted small mt-2">
-                    <i class="fas fa-clock me-1"></i> Requested {{ a.created_at.strftime('%b %d, %Y') }}
-                </div>
-            </div>
+<div class="row g-2 mb-4" data-aos="fade-up">
+    {% for count, label, icon, cls in [
+        (pending_n,    tr('Pending'),     'fa-hourglass-half', 'warning'),
+        (approved_n,   tr('Approved'),    'fa-check-circle',   'success'),
+        (rejected_n,   tr('Declined'),    'fa-times-circle',   'danger'),
+        (reschedule_n, tr('Rescheduled'), 'fa-rotate',         'primary')
+    ] %}
+    <div class="col-6 col-md-3">
+        <div class="card text-center py-3 border-{{ cls }}" style="border-width:2px !important;">
+            <i class="fas {{ icon }} text-{{ cls }} mb-1" style="font-size:1.4rem;"></i>
+            <div class="fw-bold fs-5">{{ count }}</div>
+            <div class="small text-muted">{{ label }}</div>
         </div>
     </div>
     {% endfor %}
 </div>
-{% else %}
-<div class="card" data-aos="fade-up">
-    <div class="card-body text-center py-5 text-muted">
-        <i class="fas fa-calendar-plus fa-3x d-block mb-3 opacity-25"></i>
-        <p class="mb-1 fw-medium">No appointment requests yet</p>
-        <p class="small mb-3">Submit a request and your care team will confirm the appointment.</p>
-        <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Request Appointment
-        </a>
+
+<!-- ── Appointment Cards ───────────────────────────────────── -->
+<div class="d-flex flex-column gap-3">
+{% for a in appointments %}
+
+{% set sv = a.status.value %}
+{% set is_new = (a.updated_at and (a.updated_at - a.created_at).total_seconds() > 60) %}
+
+<div class="appt-card" data-aos="fade-up">
+
+    <!-- Status Banner -->
+    <div class="status-banner banner-{{ sv }}">
+        {% if sv == 'pending' %}
+        <i class="fas fa-hourglass-half"></i>
+        <div>
+            <div>{{ tr('Waiting for Confirmation') }}</div>
+            <div style="font-size:.78rem;font-weight:400;opacity:.75;">{{ tr('Your request has been submitted and is under review.') }}</div>
+        </div>
+        {% elif sv == 'approved' %}
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <div>{{ tr('Appointment Confirmed') }} ✓</div>
+            <div style="font-size:.78rem;font-weight:400;opacity:.75;">{{ tr('Your appointment has been approved and is confirmed.') }}</div>
+        </div>
+        {% elif sv == 'rejected' %}
+        <i class="fas fa-times-circle"></i>
+        <div>
+            <div>{{ tr('Appointment Declined') }}</div>
+            <div style="font-size:.78rem;font-weight:400;opacity:.75;">{{ tr('Your appointment request was not approved. You may submit a new request.') }}</div>
+        </div>
+        {% else %}
+        <i class="fas fa-rotate"></i>
+        <div>
+            <div>{{ tr('Appointment Postponed / Rescheduled') }}</div>
+            <div style="font-size:.78rem;font-weight:400;opacity:.75;">{{ tr('Your appointment has been moved to a new date. See details below.') }}</div>
+        </div>
+        {% endif %}
+        {% if is_new %}
+        <span class="ms-auto badge bg-{{ 'success' if sv == 'approved' else 'danger' if sv == 'rejected' else 'info text-dark' }} new-badge">
+            Updated
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Card Body -->
+    <div class="card-body px-4 py-3">
+        <div class="row g-3 align-items-start">
+            <div class="col-12 col-md-7">
+
+                <!-- Confirmed / rescheduled date highlight -->
+                {% if sv in ('approved', 'rescheduled') and a.scheduled_date %}
+                <div class="alert alert-{{ 'success' if sv == 'approved' else 'primary' }} d-flex align-items-center gap-2 py-2 mb-3">
+                    <i class="fas fa-calendar-check fa-lg"></i>
+                    <div>
+                        <strong>{{ 'Confirmed Date' if sv == 'approved' else 'New Date' }}:</strong>
+                        {{ a.scheduled_date.strftime('%A, %B %d, %Y at %H:%M') }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Admin notes / reason displayed prominently -->
+                {% if sv == 'rejected' and a.admin_notes %}
+                <div class="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3">
+                    <i class="fas fa-comment-dots fa-lg"></i>
+                    <div><strong>Reason:</strong> {{ a.admin_notes }}</div>
+                </div>
+                {% endif %}
+
+                <!-- Detail rows -->
+                <div class="detail-row">
+                    <span class="lbl"><i class="fas fa-calendar me-1"></i>{{ tr('Requested Date') }}</span>
+                    <span class="val">{{ a.preferred_date.strftime('%A, %B %d, %Y at %H:%M') }}</span>
+                </div>
+
+                {% if a.reason %}
+                <div class="detail-row">
+                    <span class="lbl"><i class="fas fa-notes-medical me-1"></i>{{ tr('Reason') }}</span>
+                    <span class="val">{{ a.reason }}</span>
+                </div>
+                {% endif %}
+
+                {% if a.assigned_hcp %}
+                <div class="detail-row">
+                    <span class="lbl"><i class="fas fa-user-doctor me-1"></i>{{ tr('Provider') }}</span>
+                    <span class="val fw-medium">{{ a.assigned_hcp.get_full_name() }}
+                        <span class="badge bg-light text-muted border ms-1" style="font-size:.7rem;">{{ a.assigned_hcp.role.value }}</span>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if a.admin_notes and sv != 'rejected' %}
+                <div class="detail-row">
+                    <span class="lbl"><i class="fas fa-comment-medical me-1"></i>{{ tr('Admin Note') }}</span>
+                    <span class="val fst-italic text-muted">"{{ a.admin_notes }}"</span>
+                </div>
+                {% endif %}
+
+                <div class="detail-row">
+                    <span class="lbl"><i class="fas fa-clock me-1"></i>{{ tr('Submitted') }}</span>
+                    <span class="val text-muted">{{ a.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+                </div>
+                {% if a.updated_at and a.updated_at != a.created_at %}
+                <div class="detail-row">
+                    <span class="lbl"><i class="fas fa-pen me-1"></i>{{ tr('Last Updated') }}</span>
+                    <span class="val text-muted">{{ a.updated_at.strftime('%B %d, %Y at %H:%M') }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right column: status timeline & actions -->
+            <div class="col-12 col-md-5">
+                <!-- Mini timeline -->
+                <div class="mb-3" style="font-size:.82rem;">
+                    <div class="fw-semibold text-muted mb-2" style="font-size:.73rem;text-transform:uppercase;letter-spacing:.06em;">{{ tr('Status Timeline') }}</div>
+                    {% for step_sv, step_label in [
+                        ('submitted',   tr('Request Submitted')),
+                        ('pending',     tr('Under Review')),
+                        ('approved',    tr('Confirmed')),
+                        ('rejected',    tr('Declined')),
+                        ('rescheduled', tr('Rescheduled'))
+                    ] %}
+                    {% if step_sv == 'submitted' or
+                          (step_sv == 'pending' and sv in ('pending','approved','rejected','rescheduled')) or
+                          (step_sv == sv) %}
+                    <div class="d-flex align-items-start gap-2 py-1">
+                        <div class="timeline-dot mt-1 dot-{{
+                            'approved' if step_sv == 'submitted' or (step_sv == 'pending' and sv != 'pending') else
+                            sv if step_sv == sv else 'pending'
+                        }}"></div>
+                        <div>
+                            <div class="{{ 'fw-semibold' if step_sv == sv or step_sv == 'submitted' else 'text-muted' }}">{{ step_label }}</div>
+                            {% if step_sv == 'submitted' %}
+                            <div class="text-muted" style="font-size:.72rem;">{{ a.created_at.strftime('%b %d, %Y') }}</div>
+                            {% elif step_sv == sv and a.updated_at %}
+                            <div class="text-muted" style="font-size:.72rem;">{{ a.updated_at.strftime('%b %d, %Y') }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Action buttons -->
+                {% if sv == 'rejected' %}
+                <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-primary btn-sm w-100 mt-2">
+                    <i class="fas fa-calendar-plus me-1"></i> {{ tr('Submit New Request') }}
+                </a>
+                {% elif sv == 'pending' %}
+                <div class="alert alert-warning py-2 small text-center mb-0">
+                    <i class="fas fa-clock me-1"></i> {{ tr("Awaiting admin review. You'll be notified when there's an update.") }}
+                </div>
+                {% elif sv == 'approved' %}
+                <div class="alert alert-success py-2 small text-center mb-0">
+                    <i class="fas fa-check-circle me-1"></i> {{ tr('Please attend on the confirmed date. Contact your provider if you need to cancel.') }}
+                </div>
+                {% elif sv == 'rescheduled' %}
+                <div class="alert alert-primary py-2 small text-center mb-0">
+                    <i class="fas fa-rotate me-1"></i> {{ tr('Appointment Postponed / Rescheduled') }}.
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
+{% endfor %}
+</div>
+
+{% else %}
+<!-- Empty state -->
+    <div class="card text-center" data-aos="fade-up" style="border:2px dashed #e2e8f0;">
+        <div class="card-body py-5">
+            <i class="fas fa-calendar-plus fa-3x d-block mb-3 text-primary opacity-25"></i>
+            <h5 class="fw-semibold mb-1">{{ tr('No appointment requests yet') }}</h5>
+            <p class="text-muted small mb-4">{{ tr('Submit a request and your care team will confirm the appointment.') }}</p>
+            <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> {{ tr('Request an Appointment') }}
+            </a>
+        </div>
+    </div>
 {% endif %}
 {% endblock %}

@@ -64,6 +64,47 @@
     </a>
 </div>
 
+<!-- ── Appointment status alert banners ── -->
+{% if pending_appointments %}
+    {% for a in pending_appointments %}
+        {% if a.status.value == 'approved' %}
+        <div class="alert alert-success d-flex align-items-center gap-3 mb-3" data-aos="fade-down">
+            <i class="fas fa-check-circle fa-lg flex-shrink-0"></i>
+            <div class="flex-grow-1">
+                <strong>Appointment Confirmed!</strong>
+                Your appointment
+                {% if a.scheduled_date %} on <strong>{{ a.scheduled_date.strftime('%B %d, %Y at %H:%M') }}</strong>{% endif %}
+                {% if a.assigned_hcp %} with <strong>{{ a.assigned_hcp.get_full_name() }}</strong>{% endif %}
+                has been approved.
+                {% if a.admin_notes %}<br><small class="fst-italic">"{{ a.admin_notes }}"</small>{% endif %}
+            </div>
+            <a href="{{ url_for('appointments.my_appointments') }}" class="btn btn-success btn-sm text-nowrap">View</a>
+        </div>
+        {% elif a.status.value == 'rejected' %}
+        <div class="alert alert-danger d-flex align-items-center gap-3 mb-3" data-aos="fade-down">
+            <i class="fas fa-times-circle fa-lg flex-shrink-0"></i>
+            <div class="flex-grow-1">
+                <strong>Appointment Declined.</strong>
+                Your request for {{ a.preferred_date.strftime('%B %d, %Y') }} was not approved.
+                {% if a.admin_notes %}<br><small class="fst-italic">Reason: "{{ a.admin_notes }}"</small>{% endif %}
+            </div>
+            <a href="{{ url_for('appointments.request_appointment') }}" class="btn btn-danger btn-sm text-nowrap">New Request</a>
+        </div>
+        {% elif a.status.value == 'rescheduled' %}
+        <div class="alert alert-primary d-flex align-items-center gap-3 mb-3" data-aos="fade-down">
+            <i class="fas fa-rotate fa-lg flex-shrink-0"></i>
+            <div class="flex-grow-1">
+                <strong>Appointment Rescheduled.</strong>
+                Your appointment has been moved
+                {% if a.scheduled_date %} to <strong>{{ a.scheduled_date.strftime('%B %d, %Y at %H:%M') }}</strong>{% endif %}.
+                {% if a.admin_notes %}<br><small class="fst-italic">"{{ a.admin_notes }}"</small>{% endif %}
+            </div>
+            <a href="{{ url_for('appointments.my_appointments') }}" class="btn btn-primary btn-sm text-nowrap">View</a>
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
 <div class="row g-3">
 
     <!-- ── 1. ALERTS ── -->

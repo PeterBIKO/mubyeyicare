@@ -269,54 +269,67 @@ def appointment_action(appt_id):
     appt.admin_notes = notes
     appt.updated_at  = datetime.utcnow()
 
-    # Notify the patient's linked user account
+    # ── Build notification content ───────────────────────────────────────────
     patient = appt.patient
+    hcp_obj = User.query.get(hcp_id) if hcp_id else None
+
+    if action == 'approve':
+        date_str   = (appt.scheduled_date or appt.preferred_date).strftime('%B %d, %Y at %H:%M')
+        notif_title = '✅ Appointment Approved'
+        notif_msg   = f'Your appointment request has been approved and confirmed for {date_str}.'
+        if hcp_obj:
+            notif_msg += f' Your care provider: {hcp_obj.get_full_name()}.'
+        if notes:
+            notif_msg += f' Note from admin: {notes}'
+        notif_type  = 'appointment'
+    elif action == 'reject':
+        notif_title = '❌ Appointment Declined'
+        notif_msg   = 'Your appointment request has been declined by the admin.'
+        if notes:
+            notif_msg += f' Reason: {notes}'
+        notif_type  = 'reminder'
+    else:  # reschedule / postponed
+        date_str   = appt.scheduled_date.strftime('%B %d, %Y at %H:%M') if appt.scheduled_date else '(new date pending)'
+        notif_title = '🔄 Appointment Postponed / Rescheduled'
+        notif_msg   = f'Your appointment has been rescheduled to {date_str}.'
+        if notes:
+            notif_msg += f' Admin note: {notes}'
+        notif_type  = 'appointment'
+
+    # Collect unique user IDs that should receive this notification:
+    # 1. The patient's own linked user account (mother/patient who owns the record)
+    # 2. The person who submitted the request (could be a CHW on their behalf, or the patient herself)
+    notif_recipients = set()
     if patient and patient.user_id:
-        if action == 'approve':
-            date_str = appt.scheduled_date.strftime('%B %d, %Y at %H:%M') if appt.scheduled_date else appt.preferred_date.strftime('%B %d, %Y at %H:%M')
-            title   = '✅ Appointment Approved'
-            message = f'Your appointment request has been approved for {date_str}.'
-            if hcp_id:
-                hcp = User.query.get(hcp_id)
-                if hcp:
-                    message += f' Your provider: {hcp.get_full_name()}.'
-            if notes:
-                message += f' Note: {notes}'
-            notif_type = 'appointment'
-        elif action == 'reject':
-            title   = '❌ Appointment Rejected'
-            message = 'Your appointment request has been rejected.'
-            if notes:
-                message += f' Reason: {notes}'
-            notif_type = 'reminder'
-        else:  # reschedule
-            date_str = appt.scheduled_date.strftime('%B %d, %Y at %H:%M') if appt.scheduled_date else '(date TBD)'
-            title   = '🔄 Appointment Rescheduled'
-            message = f'Your appointment has been rescheduled to {date_str}.'
-            if notes:
-                message += f' Note: {notes}'
-            notif_type = 'appointment'
+        notif_recipients.add(patient.user_id)
+    if appt.requested_by_id:
+        req_user = User.query.get(appt.requested_by_id)
+        # Only notify the requester if they are a patient/mother (not a CHW submitting on behalf)
+        if req_user and req_user.role.value in ['patient', 'mother']:
+            notif_recipients.add(appt.requested_by_id)
+
+    for uid in notif_recipients:
         push_notification(
-            user_id=patient.user_id,
-            title=title,
-            message=message,
-            notif_type=notif_type,
-            link=url_for('appointments.my_appointments')
+            user_id    = uid,
+            title      = notif_title,
+            message    = notif_msg,
+            notif_type = notif_type,
+            link       = url_for('appointments.my_appointments')
         )
 
     # Also notify assigned HCP
-    if hcp_id and action in ('approve', 'reschedule'):
+    if hcp_id and action in ('approve', 'reschedule') and patient:
         date_str = (appt.scheduled_date or appt.preferred_date).strftime('%B %d, %Y at %H:%M')
         push_notification(
-            user_id=hcp_id,
-            title='📅 New Appointment Assigned',
-            message=f'You have been assigned to {patient.get_full_name()}\'s appointment on {date_str}.',
-            notif_type='appointment',
-            link=url_for('appointments.list_all')
+            user_id    = hcp_id,
+            title      = '📅 New Appointment Assigned',
+            message    = f'You have been assigned to {patient.get_full_name()}\'s appointment on {date_str}.',
+            notif_type = 'appointment',
+            link       = url_for('appointments.list_all')
         )
 
     db.session.commit()
-    flash(f'Appointment {action}d.', 'success')
+    flash(f'Appointment {action}d successfully. The patient has been notified.', 'success')
     return redirect(url_for('admin.appointments'))
 
 
@@ -364,24 +377,28 @@ def create_appointment():
         )
         db.session.add(appt)
 
-        # Notify patient
+        # Notify patient / mother
         patient = Patient.query.get(patient_id)
+        date_label = (sched_dt or pref_dt).strftime('%B %d, %Y at %H:%M')
+        patient_msg = f'An appointment has been scheduled for you on {date_label}.'
+        if hcp_id:
+            hcp_obj2 = User.query.get(hcp_id)
+            if hcp_obj2:
+                patient_msg += f' Your provider: {hcp_obj2.get_full_name()}.'
+        if admin_notes:
+            patient_msg += f' Note: {admin_notes}'
+
+        notif_recipients = set()
         if patient and patient.user_id:
-            date_label = (sched_dt or pref_dt).strftime('%B %d, %Y at %H:%M')
-            msg = f'An appointment has been scheduled for you on {date_label}.'
-            if hcp_id:
-                hcp = User.query.get(hcp_id)
-                if hcp:
-                    msg += f' Provider: {hcp.get_full_name()}.'
-            if admin_notes:
-                msg += f' Note: {admin_notes}'
-            push_notification(patient.user_id, '📅 Appointment Scheduled', msg,
+            notif_recipients.add(patient.user_id)
+
+        for uid in notif_recipients:
+            push_notification(uid, '📅 Appointment Scheduled', patient_msg,
                               notif_type='appointment',
                               link=url_for('appointments.my_appointments'))
 
         # Notify assigned HCP
         if hcp_id and patient:
-            date_label = (sched_dt or pref_dt).strftime('%B %d, %Y at %H:%M')
             push_notification(hcp_id, '📅 New Appointment Assigned',
                               f'You are assigned to {patient.get_full_name()}\'s appointment on {date_label}.',
                               notif_type='appointment',

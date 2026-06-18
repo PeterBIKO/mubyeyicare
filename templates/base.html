@@ -410,6 +410,37 @@
                     </span>
                 </li>
 
+                <!-- ── Language Switcher ── -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link d-flex align-items-center gap-1 px-2" href="#"
+                       id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       title="{{ tr('Language') }}">
+                        {% if current_lang == 'rw' %}
+                        <span style="font-size:1rem;">🇷🇼</span>
+                        <span class="d-none d-md-inline small">RW</span>
+                        {% else %}
+                        <span style="font-size:1rem;">🇬🇧</span>
+                        <span class="d-none d-md-inline small">EN</span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:160px;">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 {{ 'fw-bold' if current_lang == 'en' }}"
+                               href="{{ url_for('set_lang', lang_code='en', next=request.path) }}">
+                                <span>🇬🇧</span> English
+                                {% if current_lang == 'en' %}<i class="fas fa-check ms-auto text-success"></i>{% endif %}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2 {{ 'fw-bold' if current_lang == 'rw' }}"
+                               href="{{ url_for('set_lang', lang_code='rw', next=request.path) }}">
+                                <span>🇷🇼</span> Kinyarwanda
+                                {% if current_lang == 'rw' %}<i class="fas fa-check ms-auto text-success"></i>{% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <!-- ── Notification Bell ── -->
                 <li class="nav-item dropdown">
                     <a class="nav-link position-relative" href="#"
@@ -426,11 +457,11 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:320px;max-height:420px;overflow-y:auto;">
                         <li class="px-3 py-2 d-flex align-items-center justify-content-between border-bottom">
-                            <span class="fw-semibold small">Notifications</span>
+                            <span class="fw-semibold small">{{ tr('Notifications') }}</span>
                             {% if unread_notifications > 0 %}
                             <form method="POST" action="{{ url_for('notifications.mark_all_read') }}" class="mb-0">
                                 <button type="submit" class="btn btn-link btn-sm p-0 text-primary text-decoration-none" style="font-size:.78rem;">
-                                    Mark all read
+                                    {{ tr('Mark all read') }}
                                 </button>
                             </form>
                             {% endif %}
@@ -459,13 +490,13 @@
                             <li><hr class="dropdown-divider my-1"></li>
                             <li class="text-center py-1">
                                 <a href="{{ url_for('notifications.index') }}" class="small text-primary text-decoration-none">
-                                    View all notifications
+                                    {{ tr('View all notifications') }}
                                 </a>
                             </li>
                         {% else %}
                         <li class="text-center py-4 text-muted small">
                             <i class="fas fa-bell-slash d-block mb-1 opacity-30 fa-lg"></i>
-                            No notifications yet
+                            {{ tr('No notifications yet') }}
                         </li>
                         {% endif %}
                     </ul>
@@ -483,13 +514,13 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow">
                         <li>
                             <a class="dropdown-item" href="{{ url_for('auth.profile') }}">
-                                <i class="fas fa-user-circle me-2 text-primary"></i> My Profile
+                                <i class="fas fa-user-circle me-2 text-primary"></i> {{ tr('My Profile') }}
                             </a>
                         </li>
                         <li><hr class="dropdown-divider my-1"></li>
                         <li>
                             <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
-                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                <i class="fas fa-sign-out-alt me-2"></i> {{ tr('Logout') }}
                             </a>
                         </li>
                     </ul>
@@ -507,71 +538,71 @@
 
         {% if current_user.role.value in ['patient', 'mother'] %}
         {# ── PATIENT sidebar ── #}
-        <span class="sidebar-section">My Care</span>
-        <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fas fa-house-medical"></i> My Dashboard</a>
+        <span class="sidebar-section">{{ tr('My Care') }}</span>
+        <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fas fa-house-medical"></i> {{ tr('My Dashboard') }}</a>
         <a class="nav-link" href="{{ url_for('notifications.index') }}">
-            <i class="fas fa-bell"></i> Notifications
+            <i class="fas fa-bell"></i> {{ tr('Notifications') }}
             {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
         </a>
-        <span class="sidebar-section">Alerts &amp; Appointments</span>
-        <a class="nav-link" href="{{ url_for('appointments.my_appointments') }}"><i class="fas fa-calendar-check"></i> My Appointments</a>
-        <a class="nav-link" href="{{ url_for('appointments.request_appointment') }}"><i class="fas fa-calendar-plus"></i> Request Appointment</a>
-        <span class="sidebar-section">Communication</span>
-        <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}"><i class="fas fa-comments"></i> Chat with Provider</a>
-        <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-        <span class="sidebar-section">Education</span>
-        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> Education Library</a>
-        <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> My Bookmarks</a>
-        <a class="nav-link" href="{{ url_for('dashboard.health_education') }}"><i class="fas fa-book-medical"></i> Wound Care Guide</a>
+        <span class="sidebar-section">{{ tr('Alerts & Appointments') }}</span>
+        <a class="nav-link" href="{{ url_for('appointments.my_appointments') }}"><i class="fas fa-calendar-check"></i> {{ tr('My Appointments') }}</a>
+        <a class="nav-link" href="{{ url_for('appointments.request_appointment') }}"><i class="fas fa-calendar-plus"></i> {{ tr('Request Appointment') }}</a>
+        <span class="sidebar-section">{{ tr('Communication') }}</span>
+        <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}"><i class="fas fa-comments"></i> {{ tr('Chat with Provider') }}</a>
+        <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> {{ tr('Public Wall') }}</a>
+        <span class="sidebar-section">{{ tr('Education') }}</span>
+        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> {{ tr('Education Library') }}</a>
+        <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> {{ tr('My Bookmarks') }}</a>
+        <a class="nav-link" href="{{ url_for('dashboard.health_education') }}"><i class="fas fa-book-medical"></i> {{ tr('Wound Care Guide') }}</a>
 
         {% elif current_user.role.value == 'admin' %}
         {# ── ADMIN sidebar ── #}
-        <span class="sidebar-section">Admin</span>
-        <a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-halved"></i> Admin Dashboard</a>
+        <span class="sidebar-section">{{ tr('Admin') }}</span>
+        <a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-halved"></i> {{ tr('Admin Dashboard') }}</a>
         <a class="nav-link" href="{{ url_for('notifications.index') }}">
-            <i class="fas fa-bell"></i> Notifications
+            <i class="fas fa-bell"></i> {{ tr('Notifications') }}
             {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
         </a>
-        <span class="sidebar-section">User Management</span>
-        <a class="nav-link" href="{{ url_for('admin.users') }}"><i class="fas fa-users-gear"></i> All Users</a>
-        <a class="nav-link" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Register User</a>
-        <a class="nav-link" href="{{ url_for('admin.patients') }}"><i class="fas fa-bed-pulse"></i> All Patients</a>
-        <span class="sidebar-section">Monitoring</span>
-        <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}"><i class="fas fa-eye"></i> Chat Monitor</a>
-        <a class="nav-link" href="{{ url_for('admin.broadcast') }}"><i class="fas fa-bullhorn"></i> Broadcast</a>
-        <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-        <span class="sidebar-section">Appointments &amp; Alerts</span>
-        <a class="nav-link" href="{{ url_for('admin.appointments') }}"><i class="fas fa-calendar-days"></i> Appointments</a>
-        <a class="nav-link" href="{{ url_for('admin.create_appointment') }}"><i class="fas fa-calendar-plus"></i> New Appointment</a>
-        <a class="nav-link" href="{{ url_for('admin.create_alert') }}"><i class="fas fa-triangle-exclamation"></i> New Alert</a>
-        <a class="nav-link" href="{{ url_for('admin.create_notification') }}"><i class="fas fa-paper-plane"></i> Send Notification</a>
-        <span class="sidebar-section">Education</span>
-        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> Education Library</a>
-        <a class="nav-link" href="{{ url_for('admin.education') }}"><i class="fas fa-cogs"></i> Manage Content</a>
-        <span class="sidebar-section">Reports</span>
-        <a class="nav-link" href="{{ url_for('admin.reports') }}"><i class="fas fa-chart-pie"></i> Reports &amp; Analytics</a>
-        <a class="nav-link" href="{{ url_for('dashboard.analytics') }}"><i class="fas fa-chart-bar"></i> Clinical Analytics</a>
+        <span class="sidebar-section">{{ tr('User Management') }}</span>
+        <a class="nav-link" href="{{ url_for('admin.users') }}"><i class="fas fa-users-gear"></i> {{ tr('All Users') }}</a>
+        <a class="nav-link" href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> {{ tr('Register User') }}</a>
+        <a class="nav-link" href="{{ url_for('admin.patients') }}"><i class="fas fa-bed-pulse"></i> {{ tr('All Patients') }}</a>
+        <span class="sidebar-section">{{ tr('Monitoring') }}</span>
+        <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}"><i class="fas fa-eye"></i> {{ tr('Chat Monitor') }}</a>
+        <a class="nav-link" href="{{ url_for('admin.broadcast') }}"><i class="fas fa-bullhorn"></i> {{ tr('Broadcast') }}</a>
+        <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> {{ tr('Public Wall') }}</a>
+        <span class="sidebar-section">{{ tr('Appointments & Alerts') }}</span>
+        <a class="nav-link" href="{{ url_for('admin.appointments') }}"><i class="fas fa-calendar-days"></i> {{ tr('Appointments') }}</a>
+        <a class="nav-link" href="{{ url_for('admin.create_appointment') }}"><i class="fas fa-calendar-plus"></i> {{ tr('New Appointment') }}</a>
+        <a class="nav-link" href="{{ url_for('admin.create_alert') }}"><i class="fas fa-triangle-exclamation"></i> {{ tr('New Alert') }}</a>
+        <a class="nav-link" href="{{ url_for('admin.create_notification') }}"><i class="fas fa-paper-plane"></i> {{ tr('Send Notification') }}</a>
+        <span class="sidebar-section">{{ tr('Education') }}</span>
+        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> {{ tr('Education Library') }}</a>
+        <a class="nav-link" href="{{ url_for('admin.education') }}"><i class="fas fa-cogs"></i> {{ tr('Manage Content') }}</a>
+        <span class="sidebar-section">{{ tr('Reports') }}</span>
+        <a class="nav-link" href="{{ url_for('admin.reports') }}"><i class="fas fa-chart-pie"></i> {{ tr('Reports & Analytics') }}</a>
+        <a class="nav-link" href="{{ url_for('dashboard.analytics') }}"><i class="fas fa-chart-bar"></i> {{ tr('Clinical Analytics') }}</a>
 
         {% else %}
         {# ── HCP (Doctor / Nurse / CHW) sidebar ── #}
-        <span class="sidebar-section">Main</span>
-        <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <span class="sidebar-section">{{ tr('Main') }}</span>
+        <a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fas fa-tachometer-alt"></i> {{ tr('Dashboard') }}</a>
         <a class="nav-link" href="{{ url_for('notifications.index') }}">
-            <i class="fas fa-bell"></i> Notifications
+            <i class="fas fa-bell"></i> {{ tr('Notifications') }}
             {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
         </a>
-        <span class="sidebar-section">Patients</span>
-        <a class="nav-link" href="{{ url_for('patients.list_patients') }}"><i class="fas fa-users"></i> Patient Records</a>
-        <a class="nav-link" href="{{ url_for('appointments.list_all') }}"><i class="fas fa-calendar-check"></i> Appointments</a>
-        <span class="sidebar-section">Messaging</span>
-        <a class="nav-link" href="{{ url_for('chat.chat_list') }}"><i class="fas fa-lock"></i> Private Chats</a>
-        <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-        <span class="sidebar-section">Education</span>
-        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> Education Library</a>
-        <a class="nav-link" href="{{ url_for('education.submit') }}"><i class="fas fa-upload"></i> Submit Content</a>
-        <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> My Bookmarks</a>
-        <span class="sidebar-section">Analytics</span>
-        <a class="nav-link" href="{{ url_for('dashboard.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
+        <span class="sidebar-section">{{ tr('Patients') }}</span>
+        <a class="nav-link" href="{{ url_for('patients.list_patients') }}"><i class="fas fa-users"></i> {{ tr('Patient Records') }}</a>
+        <a class="nav-link" href="{{ url_for('appointments.list_all') }}"><i class="fas fa-calendar-check"></i> {{ tr('Appointments') }}</a>
+        <span class="sidebar-section">{{ tr('Messaging') }}</span>
+        <a class="nav-link" href="{{ url_for('chat.chat_list') }}"><i class="fas fa-lock"></i> {{ tr('Private Chats') }}</a>
+        <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> {{ tr('Public Wall') }}</a>
+        <span class="sidebar-section">{{ tr('Education') }}</span>
+        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> {{ tr('Education Library') }}</a>
+        <a class="nav-link" href="{{ url_for('education.submit') }}"><i class="fas fa-upload"></i> {{ tr('Submit Content') }}</a>
+        <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> {{ tr('My Bookmarks') }}</a>
+        <span class="sidebar-section">{{ tr('Analytics') }}</span>
+        <a class="nav-link" href="{{ url_for('dashboard.analytics') }}"><i class="fas fa-chart-bar"></i> {{ tr('Analytics') }}</a>
         {% endif %}
 
     </nav>
@@ -590,71 +621,71 @@
 
             {% if current_user.role.value in ['patient', 'mother'] %}
             {# ── PATIENT sidebar ── #}
-            <span class="sidebar-section">My Care</span>
-            <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-house-medical"></i> My Dashboard</a>
+            <span class="sidebar-section">{{ tr('My Care') }}</span>
+            <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-house-medical"></i> {{ tr('My Dashboard') }}</a>
             <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
-                <i class="fas fa-bell"></i> Notifications
+                <i class="fas fa-bell"></i> {{ tr('Notifications') }}
                 {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
             </a>
-            <span class="sidebar-section">Alerts &amp; Appointments</span>
-            <a class="nav-link" href="{{ url_for('appointments.my_appointments') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-check"></i> My Appointments</a>
-            <a class="nav-link" href="{{ url_for('appointments.request_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> Request Appointment</a>
-            <span class="sidebar-section">Communication</span>
-            <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments"></i> Chat with Provider</a>
-            <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-            <span class="sidebar-section">Education</span>
-            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Library</a>
-            <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> My Bookmarks</a>
-            <a class="nav-link" href="{{ url_for('dashboard.health_education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-book-medical"></i> Wound Care Guide</a>
+            <span class="sidebar-section">{{ tr('Alerts & Appointments') }}</span>
+            <a class="nav-link" href="{{ url_for('appointments.my_appointments') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-check"></i> {{ tr('My Appointments') }}</a>
+            <a class="nav-link" href="{{ url_for('appointments.request_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> {{ tr('Request Appointment') }}</a>
+            <span class="sidebar-section">{{ tr('Communication') }}</span>
+            <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments"></i> {{ tr('Chat with Provider') }}</a>
+            <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> {{ tr('Public Wall') }}</a>
+            <span class="sidebar-section">{{ tr('Education') }}</span>
+            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> {{ tr('Education Library') }}</a>
+            <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> {{ tr('My Bookmarks') }}</a>
+            <a class="nav-link" href="{{ url_for('dashboard.health_education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-book-medical"></i> {{ tr('Wound Care Guide') }}</a>
 
             {% elif current_user.role.value == 'admin' %}
             {# ── ADMIN sidebar ── #}
-            <span class="sidebar-section">Admin</span>
-            <a class="nav-link" href="{{ url_for('admin.dashboard') }}" data-bs-dismiss="offcanvas"><i class="fas fa-shield-halved"></i> Admin Dashboard</a>
+            <span class="sidebar-section">{{ tr('Admin') }}</span>
+            <a class="nav-link" href="{{ url_for('admin.dashboard') }}" data-bs-dismiss="offcanvas"><i class="fas fa-shield-halved"></i> {{ tr('Admin Dashboard') }}</a>
             <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
-                <i class="fas fa-bell"></i> Notifications
+                <i class="fas fa-bell"></i> {{ tr('Notifications') }}
                 {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
             </a>
-            <span class="sidebar-section">User Management</span>
-            <a class="nav-link" href="{{ url_for('admin.users') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users-gear"></i> All Users</a>
-            <a class="nav-link" href="{{ url_for('auth.register') }}" data-bs-dismiss="offcanvas"><i class="fas fa-user-plus"></i> Register User</a>
-            <a class="nav-link" href="{{ url_for('admin.patients') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bed-pulse"></i> All Patients</a>
-            <span class="sidebar-section">Monitoring</span>
-            <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}" data-bs-dismiss="offcanvas"><i class="fas fa-eye"></i> Chat Monitor</a>
-            <a class="nav-link" href="{{ url_for('admin.broadcast') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bullhorn"></i> Broadcast</a>
-            <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-            <span class="sidebar-section">Appointments &amp; Alerts</span>
-            <a class="nav-link" href="{{ url_for('admin.appointments') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-days"></i> Appointments</a>
-            <a class="nav-link" href="{{ url_for('admin.create_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> New Appointment</a>
-            <a class="nav-link" href="{{ url_for('admin.create_alert') }}" data-bs-dismiss="offcanvas"><i class="fas fa-triangle-exclamation"></i> New Alert</a>
-            <a class="nav-link" href="{{ url_for('admin.create_notification') }}" data-bs-dismiss="offcanvas"><i class="fas fa-paper-plane"></i> Send Notification</a>
-            <span class="sidebar-section">Education</span>
-            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Library</a>
-            <a class="nav-link" href="{{ url_for('admin.education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-cogs"></i> Manage Content</a>
-            <span class="sidebar-section">Reports</span>
-            <a class="nav-link" href="{{ url_for('admin.reports') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-pie"></i> Reports &amp; Analytics</a>
-            <a class="nav-link" href="{{ url_for('dashboard.analytics') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-bar"></i> Clinical Analytics</a>
+            <span class="sidebar-section">{{ tr('User Management') }}</span>
+            <a class="nav-link" href="{{ url_for('admin.users') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users-gear"></i> {{ tr('All Users') }}</a>
+            <a class="nav-link" href="{{ url_for('auth.register') }}" data-bs-dismiss="offcanvas"><i class="fas fa-user-plus"></i> {{ tr('Register User') }}</a>
+            <a class="nav-link" href="{{ url_for('admin.patients') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bed-pulse"></i> {{ tr('All Patients') }}</a>
+            <span class="sidebar-section">{{ tr('Monitoring') }}</span>
+            <a class="nav-link" href="{{ url_for('admin.chat_monitor') }}" data-bs-dismiss="offcanvas"><i class="fas fa-eye"></i> {{ tr('Chat Monitor') }}</a>
+            <a class="nav-link" href="{{ url_for('admin.broadcast') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bullhorn"></i> {{ tr('Broadcast') }}</a>
+            <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> {{ tr('Public Wall') }}</a>
+            <span class="sidebar-section">{{ tr('Appointments & Alerts') }}</span>
+            <a class="nav-link" href="{{ url_for('admin.appointments') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-days"></i> {{ tr('Appointments') }}</a>
+            <a class="nav-link" href="{{ url_for('admin.create_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> {{ tr('New Appointment') }}</a>
+            <a class="nav-link" href="{{ url_for('admin.create_alert') }}" data-bs-dismiss="offcanvas"><i class="fas fa-triangle-exclamation"></i> {{ tr('New Alert') }}</a>
+            <a class="nav-link" href="{{ url_for('admin.create_notification') }}" data-bs-dismiss="offcanvas"><i class="fas fa-paper-plane"></i> {{ tr('Send Notification') }}</a>
+            <span class="sidebar-section">{{ tr('Education') }}</span>
+            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> {{ tr('Education Library') }}</a>
+            <a class="nav-link" href="{{ url_for('admin.education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-cogs"></i> {{ tr('Manage Content') }}</a>
+            <span class="sidebar-section">{{ tr('Reports') }}</span>
+            <a class="nav-link" href="{{ url_for('admin.reports') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-pie"></i> {{ tr('Reports & Analytics') }}</a>
+            <a class="nav-link" href="{{ url_for('dashboard.analytics') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-bar"></i> {{ tr('Clinical Analytics') }}</a>
 
             {% else %}
             {# ── HCP sidebar ── #}
-            <span class="sidebar-section">Main</span>
-            <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <span class="sidebar-section">{{ tr('Main') }}</span>
+            <a class="nav-link" href="{{ url_for('dashboard.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-tachometer-alt"></i> {{ tr('Dashboard') }}</a>
             <a class="nav-link" href="{{ url_for('notifications.index') }}" data-bs-dismiss="offcanvas">
-                <i class="fas fa-bell"></i> Notifications
+                <i class="fas fa-bell"></i> {{ tr('Notifications') }}
                 {% if unread_notifications > 0 %}<span class="badge bg-danger ms-auto">{{ unread_notifications }}</span>{% endif %}
             </a>
-            <span class="sidebar-section">Patients</span>
-            <a class="nav-link" href="{{ url_for('patients.list_patients') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users"></i> Patient Records</a>
-            <a class="nav-link" href="{{ url_for('appointments.list_all') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-check"></i> Appointments</a>
-            <span class="sidebar-section">Messaging</span>
-            <a class="nav-link" href="{{ url_for('chat.chat_list') }}" data-bs-dismiss="offcanvas"><i class="fas fa-lock"></i> Private Chats</a>
-            <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-            <span class="sidebar-section">Education</span>
-            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Library</a>
-            <a class="nav-link" href="{{ url_for('education.submit') }}" data-bs-dismiss="offcanvas"><i class="fas fa-upload"></i> Submit Content</a>
-            <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> My Bookmarks</a>
-            <span class="sidebar-section">Analytics</span>
-            <a class="nav-link" href="{{ url_for('dashboard.analytics') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-bar"></i> Analytics</a>
+            <span class="sidebar-section">{{ tr('Patients') }}</span>
+            <a class="nav-link" href="{{ url_for('patients.list_patients') }}" data-bs-dismiss="offcanvas"><i class="fas fa-users"></i> {{ tr('Patient Records') }}</a>
+            <a class="nav-link" href="{{ url_for('appointments.list_all') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-check"></i> {{ tr('Appointments') }}</a>
+            <span class="sidebar-section">{{ tr('Messaging') }}</span>
+            <a class="nav-link" href="{{ url_for('chat.chat_list') }}" data-bs-dismiss="offcanvas"><i class="fas fa-lock"></i> {{ tr('Private Chats') }}</a>
+            <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> {{ tr('Public Wall') }}</a>
+            <span class="sidebar-section">{{ tr('Education') }}</span>
+            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> {{ tr('Education Library') }}</a>
+            <a class="nav-link" href="{{ url_for('education.submit') }}" data-bs-dismiss="offcanvas"><i class="fas fa-upload"></i> {{ tr('Submit Content') }}</a>
+            <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> {{ tr('My Bookmarks') }}</a>
+            <span class="sidebar-section">{{ tr('Analytics') }}</span>
+            <a class="nav-link" href="{{ url_for('dashboard.analytics') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-bar"></i> {{ tr('Analytics') }}</a>
             {% endif %}
 
         </nav>
@@ -690,7 +721,7 @@
             <div class="col-md-6">
                 <p class="mb-0">
                     <i class="fas fa-heart-pulse text-danger me-1"></i>
-                    <strong class="text-white">MubyeyiCare</strong> &copy; 2026 &mdash; Post-Cesarean Wound Care System
+                    <strong class="text-white">MubyeyiCare</strong> &copy; 2026 &mdash; {{ tr('Post-Cesarean Wound Care System') }}
                 </p>
             </div>
             <div class="col-md-6 text-md-end mt-2 mt-md-0">
