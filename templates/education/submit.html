@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Submit Content – MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+.type-card {
+    border: 2px solid #e2e8f0; border-radius: .75rem; padding: 1rem;
+    cursor: pointer; transition: all .15s; text-align: center;
+}
+.type-card:hover { border-color: var(--primary); background: #f0f7ff; }
+.type-card.selected { border-color: var(--primary); background: #eff6ff; }
+.type-card i { font-size: 1.5rem; margin-bottom: .4rem; display: block; }
+.type-card span { font-size: .8rem; font-weight: 600; }
+.char-count { font-size: .75rem; color: #94a3b8; float: right; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h2><i class="fas fa-upload me-2"></i> Submit Educational Content</h2>
+    <a href="{{ url_for('education.library') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to Library
+    </a>
+</div>
+
+<div class="row">
+<div class="col-12 col-lg-8">
+<div class="card" data-aos="fade-up">
+    <div class="card-header bg-primary text-white">
+        <i class="fas fa-pen me-2"></i> Content Details
+    </div>
+    <div class="card-body p-4">
+        <div class="alert alert-info mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            Your submission will be reviewed by an admin before being published to the education library.
+            You'll receive a notification when it is approved or rejected.
+        </div>
+
+        <form method="POST" id="submitForm">
+
+            <!-- Content Type -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Content Type <span class="text-danger">*</span></label>
+                <div class="row g-2" id="typeGrid">
+                    {% for t, icon, color in [
+                        ('article',     'fa-file-lines',       '#1d4ed8'),
+                        ('video',       'fa-play-circle',      '#9d174d'),
+                        ('infographic', 'fa-image',            '#065f46'),
+                        ('guideline',   'fa-book-medical',     '#92400e'),
+                        ('quiz',        'fa-circle-question',  '#5b21b6')
+                    ] %}
+                    <div class="col-4 col-sm-2col col-md">
+                        <label class="type-card w-100 {{ 'selected' if t == 'article' }}" data-value="{{ t }}">
+                            <input type="radio" name="content_type" value="{{ t }}" class="d-none"
+                                   {{ 'checked' if t == 'article' }}>
+                            <i class="fas {{ icon }}" style="color:{{ color }};"></i>
+                            <span>{{ t.capitalize() }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                <span class="char-count" id="titleCount">0/255</span>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                    <input type="text" name="title" id="titleInput" class="form-control" required
+                           maxlength="255" placeholder="Clear, descriptive title…">
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Short Summary <small class="text-muted fw-normal">(shown on library cards)</small>
+                </label>
+                <span class="char-count" id="summaryCount">0/500</span>
+                <textarea name="summary" id="summaryInput" class="form-control" rows="2"
+                          maxlength="500"
+                          placeholder="1-2 sentence overview of what this content covers…"></textarea>
+            </div>
+
+            <!-- Category & Audience -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Category</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                        <select name="category" class="form-select">
+                            <option value="">— Select category —</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Target Audience</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-users"></i></span>
+                        <select name="target_audience" class="form-select">
+                            <option value="all" selected>Everyone</option>
+                            <option value="patients">Patients only</option>
+                            <option value="hcps">Healthcare Providers only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video URL (shown only when type=video) -->
+            <div class="mb-3" id="videoRow" style="display:none;">
+                <label class="form-label fw-semibold">Video URL <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-link"></i></span>
+                    <input type="url" name="video_url" class="form-control"
+                           placeholder="https://youtube.com/watch?v=…">
+                </div>
+                <div class="form-text">YouTube or Vimeo URLs are automatically embedded.</div>
+            </div>
+
+            <!-- Tags -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Tags <small class="text-muted fw-normal">(comma-separated)</small>
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-tags"></i></span>
+                    <input type="text" name="tags" class="form-control"
+                           placeholder="e.g. wound care, infection, recovery, dressing change">
+                </div>
+                <div class="form-text">Helps users find your content via search.</div>
+            </div>
+
+            <!-- Body -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    Content Body <span class="text-danger">*</span>
+                    <small class="text-muted fw-normal ms-1">— HTML is supported (headings, bold, lists, tables)</small>
+                </label>
+                <textarea name="body" id="bodyInput" class="form-control" rows="14" required
+                          placeholder="Write your full educational content here…&#10;&#10;You can use HTML tags:&#10;&lt;h2&gt;Section Title&lt;/h2&gt;&#10;&lt;ul&gt;&lt;li&gt;Point one&lt;/li&gt;&lt;/ul&gt;&#10;&lt;strong&gt;bold text&lt;/strong&gt;&#10;&lt;blockquote&gt;key insight&lt;/blockquote&gt;"></textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <span class="form-text">Estimated reading time: <strong id="readTime">—</strong></span>
+                    <span class="form-text" id="wordCount">0 words</span>
+                </div>
+            </div>
+
+            <hr>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-paper-plane me-1"></i> Submit for Review
+                </button>
+                <a href="{{ url_for('education.library') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+<!-- Tips Sidebar -->
+<div class="col-12 col-lg-4 mt-4 mt-lg-0" data-aos="fade-left">
+    <div class="card">
+        <div class="card-header"><i class="fas fa-lightbulb me-2 text-warning"></i> Writing Tips</div>
+        <div class="card-body" style="font-size:.85rem;">
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                <li><i class="fas fa-check-circle text-success me-2"></i><strong>Be concise:</strong> Use short paragraphs and bullet points.</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i><strong>Use headings:</strong> Break up long content with <code>&lt;h2&gt;</code> and <code>&lt;h3&gt;</code> tags.</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i><strong>Cite sources:</strong> Reference clinical guidelines where relevant.</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i><strong>Patient language:</strong> Avoid jargon for patient-facing content.</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i><strong>Add tags:</strong> Relevant tags improve discoverability.</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i><strong>Video:</strong> Paste a YouTube/Vimeo link — it embeds automatically.</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card mt-3">
+        <div class="card-header"><i class="fas fa-file-alt me-2 text-primary"></i> HTML Quick Reference</div>
+        <div class="card-body" style="font-size:.8rem;font-family:monospace;">
+            <div class="d-flex flex-column gap-1">
+                <code>&lt;h2&gt;Section heading&lt;/h2&gt;</code>
+                <code>&lt;strong&gt;Bold text&lt;/strong&gt;</code>
+                <code>&lt;em&gt;Italic text&lt;/em&gt;</code>
+                <code>&lt;ul&gt;&lt;li&gt;List item&lt;/li&gt;&lt;/ul&gt;</code>
+                <code>&lt;ol&gt;&lt;li&gt;Numbered item&lt;/li&gt;&lt;/ol&gt;</code>
+                <code>&lt;blockquote&gt;Key insight&lt;/blockquote&gt;</code>
+                <code>&lt;a href="url"&gt;Link text&lt;/a&gt;</code>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Type card toggle
+document.querySelectorAll('.type-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        card.querySelector('input').checked = true;
+        const isVideo = card.dataset.value === 'video';
+        document.getElementById('videoRow').style.display = isVideo ? '' : 'none';
+        document.querySelector('[name="video_url"]').required = isVideo;
+    });
+});
+
+// Title / summary char counters
+function charCount(inputId, countId) {
+    const inp = document.getElementById(inputId);
+    const cnt = document.getElementById(countId);
+    if (!inp || !cnt) return;
+    const update = () => cnt.textContent = `${inp.value.length}/${inp.maxLength}`;
+    inp.addEventListener('input', update); update();
+}
+charCount('titleInput','titleCount');
+charCount('summaryInput','summaryCount');
+
+// Live word count & reading time
+const bodyInput = document.getElementById('bodyInput');
+const wordCount = document.getElementById('wordCount');
+const readTime  = document.getElementById('readTime');
+if (bodyInput) {
+    bodyInput.addEventListener('input', () => {
+        const words = bodyInput.value.trim().split(/\s+/).filter(w => w).length;
+        const mins  = Math.max(1, Math.ceil(words / 200));
+        if (wordCount) wordCount.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+        if (readTime)  readTime.textContent  = `~${mins} min`;
+    });
+}
+</script>
+{% endblock %}

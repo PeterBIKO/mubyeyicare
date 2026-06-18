@@ -519,7 +519,9 @@
         <span class="sidebar-section">Communication</span>
         <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}"><i class="fas fa-comments"></i> Chat with Provider</a>
         <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-        <span class="sidebar-section">Wound Care</span>
+        <span class="sidebar-section">Education</span>
+        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> Education Library</a>
+        <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> My Bookmarks</a>
         <a class="nav-link" href="{{ url_for('dashboard.health_education') }}"><i class="fas fa-book-medical"></i> Wound Care Guide</a>
 
         {% elif current_user.role.value == 'admin' %}
@@ -543,8 +545,9 @@
         <a class="nav-link" href="{{ url_for('admin.create_appointment') }}"><i class="fas fa-calendar-plus"></i> New Appointment</a>
         <a class="nav-link" href="{{ url_for('admin.create_alert') }}"><i class="fas fa-triangle-exclamation"></i> New Alert</a>
         <a class="nav-link" href="{{ url_for('admin.create_notification') }}"><i class="fas fa-paper-plane"></i> Send Notification</a>
-        <span class="sidebar-section">Content</span>
-        <a class="nav-link" href="{{ url_for('admin.education') }}"><i class="fas fa-graduation-cap"></i> Education Content</a>
+        <span class="sidebar-section">Education</span>
+        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> Education Library</a>
+        <a class="nav-link" href="{{ url_for('admin.education') }}"><i class="fas fa-cogs"></i> Manage Content</a>
         <span class="sidebar-section">Reports</span>
         <a class="nav-link" href="{{ url_for('admin.reports') }}"><i class="fas fa-chart-pie"></i> Reports &amp; Analytics</a>
         <a class="nav-link" href="{{ url_for('dashboard.analytics') }}"><i class="fas fa-chart-bar"></i> Clinical Analytics</a>
@@ -563,9 +566,12 @@
         <span class="sidebar-section">Messaging</span>
         <a class="nav-link" href="{{ url_for('chat.chat_list') }}"><i class="fas fa-lock"></i> Private Chats</a>
         <a class="nav-link" href="{{ url_for('wall.index') }}"><i class="fas fa-comments-dollar"></i> Public Wall</a>
+        <span class="sidebar-section">Education</span>
+        <a class="nav-link" href="{{ url_for('education.library') }}"><i class="fas fa-graduation-cap"></i> Education Library</a>
+        <a class="nav-link" href="{{ url_for('education.submit') }}"><i class="fas fa-upload"></i> Submit Content</a>
+        <a class="nav-link" href="{{ url_for('education.bookmarks') }}"><i class="fas fa-bookmark"></i> My Bookmarks</a>
         <span class="sidebar-section">Analytics</span>
         <a class="nav-link" href="{{ url_for('dashboard.analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a>
-        <a class="nav-link" href="{{ url_for('dashboard.health_education') }}"><i class="fas fa-book-medical"></i> Health Education</a>
         {% endif %}
 
     </nav>
@@ -596,7 +602,9 @@
             <span class="sidebar-section">Communication</span>
             <a class="nav-link" href="{{ url_for('chat.patient_self_chat') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments"></i> Chat with Provider</a>
             <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> Public Wall</a>
-            <span class="sidebar-section">Wound Care</span>
+            <span class="sidebar-section">Education</span>
+            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Library</a>
+            <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> My Bookmarks</a>
             <a class="nav-link" href="{{ url_for('dashboard.health_education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-book-medical"></i> Wound Care Guide</a>
 
             {% elif current_user.role.value == 'admin' %}
@@ -620,8 +628,9 @@
             <a class="nav-link" href="{{ url_for('admin.create_appointment') }}" data-bs-dismiss="offcanvas"><i class="fas fa-calendar-plus"></i> New Appointment</a>
             <a class="nav-link" href="{{ url_for('admin.create_alert') }}" data-bs-dismiss="offcanvas"><i class="fas fa-triangle-exclamation"></i> New Alert</a>
             <a class="nav-link" href="{{ url_for('admin.create_notification') }}" data-bs-dismiss="offcanvas"><i class="fas fa-paper-plane"></i> Send Notification</a>
-            <span class="sidebar-section">Content</span>
-            <a class="nav-link" href="{{ url_for('admin.education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Content</a>
+            <span class="sidebar-section">Education</span>
+            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Library</a>
+            <a class="nav-link" href="{{ url_for('admin.education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-cogs"></i> Manage Content</a>
             <span class="sidebar-section">Reports</span>
             <a class="nav-link" href="{{ url_for('admin.reports') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-pie"></i> Reports &amp; Analytics</a>
             <a class="nav-link" href="{{ url_for('dashboard.analytics') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-bar"></i> Clinical Analytics</a>
@@ -640,9 +649,12 @@
             <span class="sidebar-section">Messaging</span>
             <a class="nav-link" href="{{ url_for('chat.chat_list') }}" data-bs-dismiss="offcanvas"><i class="fas fa-lock"></i> Private Chats</a>
             <a class="nav-link" href="{{ url_for('wall.index') }}" data-bs-dismiss="offcanvas"><i class="fas fa-comments-dollar"></i> Public Wall</a>
+            <span class="sidebar-section">Education</span>
+            <a class="nav-link" href="{{ url_for('education.library') }}" data-bs-dismiss="offcanvas"><i class="fas fa-graduation-cap"></i> Education Library</a>
+            <a class="nav-link" href="{{ url_for('education.submit') }}" data-bs-dismiss="offcanvas"><i class="fas fa-upload"></i> Submit Content</a>
+            <a class="nav-link" href="{{ url_for('education.bookmarks') }}" data-bs-dismiss="offcanvas"><i class="fas fa-bookmark"></i> My Bookmarks</a>
             <span class="sidebar-section">Analytics</span>
             <a class="nav-link" href="{{ url_for('dashboard.analytics') }}" data-bs-dismiss="offcanvas"><i class="fas fa-chart-bar"></i> Analytics</a>
-            <a class="nav-link" href="{{ url_for('dashboard.health_education') }}" data-bs-dismiss="offcanvas"><i class="fas fa-book-medical"></i> Health Education</a>
             {% endif %}
 
         </nav>

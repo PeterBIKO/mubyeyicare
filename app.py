@@ -37,6 +37,7 @@ def create_app(config_name=None):
     from routes.appointments import appointments_bp
     from routes.wall import wall_bp
     from routes.notifications import notifications_bp
+    from routes.education import education_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -48,6 +49,7 @@ def create_app(config_name=None):
     app.register_blueprint(appointments_bp)
     app.register_blueprint(wall_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(education_bp)
 
     @app.route('/')
     def home():
@@ -112,5 +114,25 @@ def create_app(config_name=None):
                     conn.commit()
 
         # notification table is created by db.create_all() above; no manual migration needed
+
+        # education_content: new columns added in v2
+        if "education_content" in inspector.get_table_names():
+            existing_edu = {col["name"] for col in inspector.get_columns("education_content")}
+            new_edu_cols = [
+                ("summary",          "VARCHAR(500)"),
+                ("tags",             "VARCHAR(300)"),
+                ("content_type",     "VARCHAR(30) DEFAULT 'article'"),
+                ("thumbnail_url",    "VARCHAR(300)"),
+                ("video_url",        "VARCHAR(300)"),
+                ("reading_time",     "INTEGER DEFAULT 5"),
+                ("view_count",       "INTEGER DEFAULT 0"),
+                ("is_featured",      "BOOLEAN DEFAULT 0"),
+                ("target_audience",  "VARCHAR(20) DEFAULT 'all'"),
+            ]
+            for col_name, col_def in new_edu_cols:
+                if col_name not in existing_edu:
+                    with db.engine.connect() as conn:
+                        conn.execute(text(f"ALTER TABLE education_content ADD COLUMN {col_name} {col_def}"))
+                        conn.commit()
     
     return app

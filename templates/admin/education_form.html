@@ -1,56 +1,255 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit' if content else 'Add' }} Education Content - MubyeyiCare{% endblock %}
+{% block title %}{{ 'Edit' if content else 'Create' }} Education Content – MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+.type-card {
+    border: 2px solid #e2e8f0; border-radius: .75rem; padding: .85rem .5rem;
+    cursor: pointer; transition: all .15s; text-align: center;
+}
+.type-card:hover, .type-card.selected {
+    border-color: var(--primary); background: #eff6ff;
+}
+.type-card i { font-size: 1.4rem; margin-bottom: .35rem; display: block; }
+.type-card span { font-size: .78rem; font-weight: 600; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="page-header" data-aos="fade-down">
-    <h2><i class="fas fa-graduation-cap me-2"></i> {{ 'Edit' if content else 'New' }} Education Content</h2>
-    <a href="{{ url_for('admin.education') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back</a>
+    <h2>
+        <i class="fas fa-{{ 'pen' if content else 'plus' }} me-2"></i>
+        {{ 'Edit' if content else 'Create' }} Education Content
+    </h2>
+    <a href="{{ url_for('admin.education') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back
+    </a>
 </div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-8" data-aos="fade-up">
-        <div class="card">
-            <div class="card-header bg-primary text-white"><i class="fas fa-pen me-2"></i> Content Details</div>
-            <div class="card-body p-4">
-                <form method="POST"
-                      action="{{ url_for('admin.edit_education', content_id=content.id) if content else url_for('admin.create_education') }}">
-                    <div class="mb-3">
-                        <label class="form-label">Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="title" required
-                               value="{{ content.title if content else '' }}" placeholder="e.g. Wound Care After C-Section">
+<div class="row">
+<div class="col-12 col-lg-8" data-aos="fade-up">
+<div class="card">
+    <div class="card-header bg-primary text-white"><i class="fas fa-pen me-2"></i> Content Details</div>
+    <div class="card-body p-4">
+        <form method="POST"
+              action="{{ url_for('admin.edit_education', content_id=content.id) if content else url_for('admin.create_education') }}">
+
+            <!-- Content Type -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Content Type <span class="text-danger">*</span></label>
+                <div class="row g-2" id="typeGrid">
+                    {% set cur_type = content.content_type if content else 'article' %}
+                    {% for t, icon, color in [
+                        ('article',     'fa-file-lines',      '#1d4ed8'),
+                        ('video',       'fa-play-circle',     '#9d174d'),
+                        ('infographic', 'fa-image',           '#065f46'),
+                        ('guideline',   'fa-book-medical',    '#92400e'),
+                        ('quiz',        'fa-circle-question', '#5b21b6')
+                    ] %}
+                    <div class="col-4 col-sm col-md">
+                        <label class="type-card w-100 {{ 'selected' if cur_type == t }}" data-value="{{ t }}">
+                            <input type="radio" name="content_type" value="{{ t }}" class="d-none"
+                                   {{ 'checked' if cur_type == t }}>
+                            <i class="fas {{ icon }}" style="color:{{ color }};"></i>
+                            <span>{{ t.capitalize() }}</span>
+                        </label>
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Category</label>
-                            <input type="text" class="form-control" name="category"
-                                   value="{{ content.category if content else '' }}"
-                                   placeholder="e.g. Wound Care, Nutrition, Pain Management">
-                        </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <div class="form-check p-3 border rounded-3 w-100" style="padding-left:2rem !important;">
-                                <input class="form-check-input" type="checkbox" id="publish" name="publish"
-                                       {{ 'checked' if content and content.published_to_patients }}>
-                                <label class="form-check-label fw-medium" for="publish">
-                                    <i class="fas fa-eye text-success me-1"></i> Publish to Patient Dashboard
-                                </label>
-                            </div>
-                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Title <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                    <input type="text" name="title" class="form-control" required maxlength="255"
+                           value="{{ content.title if content else '' }}"
+                           placeholder="Clear, descriptive title…">
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Short Summary <small class="text-muted fw-normal">(shown on library cards)</small>
+                </label>
+                <textarea name="summary" class="form-control" rows="2" maxlength="500"
+                          placeholder="1-2 sentence overview…">{{ content.summary if content else '' }}</textarea>
+            </div>
+
+            <!-- Category & Audience -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Category</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                        <select name="category" class="form-select">
+                            <option value="">— Select or type —</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {{ 'selected' if content and content.category == cat }}>{{ cat }}</option>
+                            {% endfor %}
+                            {% if content and content.category and content.category not in categories %}
+                            <option value="{{ content.category }}" selected>{{ content.category }}</option>
+                            {% endif %}
+                        </select>
                     </div>
-                    <div class="mb-4">
-                        <label class="form-label">Content Body <span class="text-danger">*</span></label>
-                        <textarea class="form-control" name="body" rows="10" required
-                                  placeholder="Write the educational content here…">{{ content.body if content else '' }}</textarea>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Target Audience</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-users"></i></span>
+                        <select name="target_audience" class="form-select">
+                            {% set cur_aud = content.target_audience if content else 'all' %}
+                            <option value="all"      {{ 'selected' if cur_aud == 'all' }}>Everyone</option>
+                            <option value="patients" {{ 'selected' if cur_aud == 'patients' }}>Patients only</option>
+                            <option value="hcps"     {{ 'selected' if cur_aud == 'hcps' }}>Healthcare Providers only</option>
+                        </select>
                     </div>
-                    <hr class="my-3">
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="fas fa-save me-1"></i> {{ 'Save Changes' if content else 'Create Content' }}
-                        </button>
-                        <a href="{{ url_for('admin.education') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+
+            <!-- Tags & Thumbnail -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Tags <small class="text-muted fw-normal">(comma-separated)</small></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-tags"></i></span>
+                        <input type="text" name="tags" class="form-control"
+                               value="{{ content.tags if content else '' }}"
+                               placeholder="wound care, infection, recovery…">
                     </div>
-                </form>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-semibold">Thumbnail URL <small class="text-muted fw-normal">(optional)</small></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-image"></i></span>
+                        <input type="url" name="thumbnail_url" class="form-control"
+                               value="{{ content.thumbnail_url if content else '' }}"
+                               placeholder="https://…image.jpg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video URL -->
+            <div class="mb-3" id="videoRow" style="{{ 'display:none;' if not content or content.content_type != 'video' }}">
+                <label class="form-label fw-semibold">Video URL</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-link"></i></span>
+                    <input type="url" name="video_url" class="form-control"
+                           value="{{ content.video_url if content else '' }}"
+                           placeholder="https://youtube.com/watch?v=…">
+                </div>
+            </div>
+
+            <!-- Featured & Publish checkboxes -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                    <div class="form-check p-3 border rounded-3" style="padding-left:2rem !important;">
+                        <input class="form-check-input" type="checkbox" id="publish" name="publish"
+                               {{ 'checked' if content and content.published_to_patients }}>
+                        <label class="form-check-label fw-medium" for="publish">
+                            <i class="fas fa-globe text-success me-1"></i> Publish to Patient Library
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="form-check p-3 border rounded-3" style="padding-left:2rem !important;">
+                        <input class="form-check-input" type="checkbox" id="featured" name="is_featured"
+                               {{ 'checked' if content and content.is_featured }}>
+                        <label class="form-check-label fw-medium" for="featured">
+                            <i class="fas fa-star text-warning me-1"></i> Mark as Featured
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    Content Body <span class="text-danger">*</span>
+                    <small class="text-muted fw-normal ms-1">— HTML supported</small>
+                </label>
+                <textarea class="form-control" name="body" id="bodyInput" rows="14" required
+                          placeholder="Write the educational content here… HTML tags are supported.">{{ content.body if content else '' }}</textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <span class="form-text">Est. reading time: <strong id="readTime">{{ content.reading_time_label() if content else '—' }}</strong></span>
+                    <span class="form-text" id="wordCount"></span>
+                </div>
+            </div>
+
+            <hr>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-save me-1"></i> {{ 'Save Changes' if content else 'Create Content' }}
+                </button>
+                <a href="{{ url_for('admin.education') }}" class="btn btn-outline-secondary">Cancel</a>
+                {% if content %}
+                <a href="{{ url_for('education.article', content_id=content.id) }}"
+                   class="btn btn-outline-info ms-auto" target="_blank">
+                    <i class="fas fa-eye me-1"></i> Preview
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+<!-- Tips Sidebar -->
+<div class="col-12 col-lg-4 mt-4 mt-lg-0" data-aos="fade-left">
+    <div class="card">
+        <div class="card-header"><i class="fas fa-lightbulb me-2 text-warning"></i> Tips</div>
+        <div class="card-body" style="font-size:.84rem;">
+            <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                <li><i class="fas fa-check text-success me-2"></i><strong>Featured:</strong> Shows in the hero carousel at the top of the library.</li>
+                <li><i class="fas fa-check text-success me-2"></i><strong>Published:</strong> Only published content is visible to patients and HCPs in the library.</li>
+                <li><i class="fas fa-check text-success me-2"></i><strong>Tags:</strong> Comma-separated keywords help users find content.</li>
+                <li><i class="fas fa-check text-success me-2"></i><strong>Audience:</strong> HCP-only content is hidden from patients.</li>
+                <li><i class="fas fa-check text-success me-2"></i><strong>Video:</strong> YouTube/Vimeo links are auto-embedded in the article reader.</li>
+            </ul>
+        </div>
+    </div>
+    <div class="card mt-3">
+        <div class="card-header"><i class="fas fa-code me-2 text-primary"></i> HTML Quick Ref</div>
+        <div class="card-body" style="font-size:.78rem;font-family:monospace;">
+            <div class="d-flex flex-column gap-1">
+                <code>&lt;h2&gt;Section&lt;/h2&gt;</code>
+                <code>&lt;strong&gt;Bold&lt;/strong&gt;</code>
+                <code>&lt;ul&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/ul&gt;</code>
+                <code>&lt;blockquote&gt;Quote&lt;/blockquote&gt;</code>
+                <code>&lt;img src="url" alt="desc"&gt;</code>
             </div>
         </div>
     </div>
 </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.type-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        card.querySelector('input').checked = true;
+        document.getElementById('videoRow').style.display =
+            card.dataset.value === 'video' ? '' : 'none';
+    });
+});
+
+const bodyInput = document.getElementById('bodyInput');
+const readTime  = document.getElementById('readTime');
+const wordCount = document.getElementById('wordCount');
+if (bodyInput) {
+    const update = () => {
+        const words = bodyInput.value.trim().split(/\s+/).filter(w=>w).length;
+        const mins  = Math.max(1, Math.ceil(words/200));
+        if (readTime)  readTime.textContent  = `~${mins} min`;
+        if (wordCount) wordCount.textContent = `${words} words`;
+    };
+    bodyInput.addEventListener('input', update);
+    update();
+}
+</script>
 {% endblock %}

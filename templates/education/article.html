@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}{{ ec.title }} – MubyeyiCare{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Article Layout ─────────────────────────────────── */
+.article-hero {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    border-radius: 1rem;
+    padding: 2.5rem 2rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.article-hero::after {
+    content:''; position:absolute; bottom:-40px; right:-40px;
+    width:180px; height:180px; border-radius:50%;
+    background: rgba(255,255,255,.06);
+}
+.article-meta span { opacity:.8; font-size:.83rem; margin-right:1.2rem; }
+
+/* ── Body Prose ─────────────────────────────────────── */
+.article-body {
+    font-size:1.03rem;
+    line-height: 1.85;
+    color: #374151;
+}
+.article-body h1,.article-body h2,.article-body h3 {
+    font-weight:700; margin-top:2rem; margin-bottom:.75rem; color:#1e293b;
+}
+.article-body h2 { font-size:1.25rem; }
+.article-body h3 { font-size:1.1rem; }
+.article-body p  { margin-bottom:1.1rem; }
+.article-body ul,.article-body ol { margin-bottom:1rem; padding-left:1.5rem; }
+.article-body li { margin-bottom:.35rem; }
+.article-body blockquote {
+    border-left: 4px solid var(--primary);
+    padding:.75rem 1rem;
+    margin:1.2rem 0;
+    background:#f0f7ff;
+    border-radius:0 .5rem .5rem 0;
+    color:#1e40af;
+}
+.article-body pre,.article-body code {
+    background: #f8fafc;
+    border-radius:.4rem;
+    font-family: monospace;
+    font-size:.9em;
+    padding:.15em .4em;
+    border:1px solid #e2e8f0;
+}
+.article-body pre { padding:1rem; overflow-x:auto; }
+.article-body img { max-width:100%; border-radius:.6rem; margin:1rem 0; }
+.article-body table { width:100%; border-collapse:collapse; margin:1rem 0; }
+.article-body th { background:#f0f7ff; color:#1e40af; font-weight:600; }
+.article-body th,.article-body td { border:1px solid #e2e8f0; padding:.5rem .75rem; }
+
+/* ── Reading progress bar ───────────────────────────── */
+#readingProgress {
+    position:fixed; top:0; left:0; height:3px;
+    background: linear-gradient(to right, #2563eb, #0ea5e9);
+    width:0%; z-index:9999; transition:width .1s;
+}
+
+/* ── Sidebar ────────────────────────────────────────── */
+.article-sidebar { position:sticky; top:80px; }
+.sidebar-widget { background:#fff; border-radius:.85rem; padding:1.25rem; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:1.25rem; }
+.sidebar-widget h6 { font-weight:700; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:#64748b; margin-bottom:.85rem; }
+
+/* ── Related Card ───────────────────────────────────── */
+.related-card { border-radius:.6rem; border:1px solid #e2e8f0; overflow:hidden; transition:box-shadow .15s; }
+.related-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.1); }
+.related-card .rc-thumb {
+    height:70px; background:linear-gradient(135deg,#1e3a5f,#2563eb);
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,.4); font-size:1.6rem;
+}
+.related-card .rc-body { padding:.7rem; font-size:.8rem; }
+
+/* ── Tags ───────────────────────────────────────────── */
+.tag-pill {
+    display:inline-block; padding:.2rem .65rem; border-radius:2rem;
+    background:#f1f5f9; color:#475569; font-size:.75rem;
+    border:1px solid #e2e8f0; text-decoration:none; margin:.1rem;
+}
+.tag-pill:hover { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+/* ── Video embed ────────────────────────────────────── */
+.video-wrapper {
+    position:relative; padding-top:56.25%; border-radius:.75rem; overflow:hidden; margin-bottom:1.5rem;
+}
+.video-wrapper iframe { position:absolute; inset:0; width:100%; height:100%; border:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Reading Progress Bar -->
+<div id="readingProgress"></div>
+
+<div class="row g-4">
+<!-- ── Article Column ─────────────────────────────── -->
+<div class="col-12 col-lg-8">
+
+    <!-- Hero Header -->
+    <div class="article-hero" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge" style="background:rgba(255,255,255,.2);font-size:.75rem;">
+                <i class="fas fa-{{ 'play-circle' if ec.content_type == 'video' else 'file-lines' if ec.content_type == 'article' else 'image' if ec.content_type == 'infographic' else 'book-medical' if ec.content_type == 'guideline' else 'circle-question' }} me-1"></i>
+                {{ ec.content_type.capitalize() }}
+            </span>
+            {% if ec.category %}
+            <span class="badge" style="background:rgba(255,255,255,.15);font-size:.75rem;">{{ ec.category }}</span>
+            {% endif %}
+            {% if ec.is_featured %}
+            <span class="badge bg-warning text-dark" style="font-size:.75rem;"><i class="fas fa-star me-1"></i>Featured</span>
+            {% endif %}
+        </div>
+        <h1 style="font-size:1.65rem;font-weight:700;line-height:1.3;">{{ ec.title }}</h1>
+        {% if ec.summary %}
+        <p class="mb-3 opacity-85">{{ ec.summary }}</p>
+        {% endif %}
+        <div class="article-meta d-flex flex-wrap align-items-center mt-2">
+            <span><i class="fas fa-user-doctor me-1"></i>{{ ec.author.get_full_name() }}</span>
+            <span><i class="fas fa-calendar me-1"></i>{{ ec.created_at.strftime('%B %d, %Y') }}</span>
+            <span><i class="fas fa-clock me-1"></i>{{ ec.reading_time_label() }}</span>
+            <span><i class="fas fa-eye me-1"></i>{{ ec.view_count }} views</span>
+        </div>
+    </div>
+
+    <!-- Thumbnail -->
+    {% if ec.thumbnail_url and ec.content_type != 'video' %}
+    <img src="{{ ec.thumbnail_url }}" alt="{{ ec.title }}"
+         class="img-fluid rounded mb-4 w-100" style="max-height:360px;object-fit:cover;">
+    {% endif %}
+
+    <!-- Video Embed -->
+    {% if ec.content_type == 'video' and ec.video_url %}
+    <div class="video-wrapper mb-4" data-aos="fade-up">
+        {% set vid_url = ec.video_url %}
+        {% if 'youtube.com/watch' in vid_url %}
+        {% set vid_id = vid_url.split('v=')[1].split('&')[0] %}
+        <iframe src="https://www.youtube.com/embed/{{ vid_id }}" allowfullscreen title="{{ ec.title }}"></iframe>
+        {% elif 'youtu.be/' in vid_url %}
+        {% set vid_id = vid_url.split('youtu.be/')[1].split('?')[0] %}
+        <iframe src="https://www.youtube.com/embed/{{ vid_id }}" allowfullscreen title="{{ ec.title }}"></iframe>
+        {% elif 'vimeo.com/' in vid_url %}
+        {% set vid_id = vid_url.split('vimeo.com/')[1].split('?')[0] %}
+        <iframe src="https://player.vimeo.com/video/{{ vid_id }}" allowfullscreen title="{{ ec.title }}"></iframe>
+        {% else %}
+        <a href="{{ vid_url }}" target="_blank" class="btn btn-primary">
+            <i class="fas fa-external-link-alt me-1"></i> Watch Video
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Article Body -->
+    <div class="card" data-aos="fade-up">
+        <div class="card-body p-4">
+            <div class="article-body" id="articleBody">
+                {{ ec.body | safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tags -->
+    {% if ec.tag_list() %}
+    <div class="mt-3 mb-2">
+        <span class="text-muted small me-2"><i class="fas fa-tags me-1"></i>Tags:</span>
+        {% for tag in ec.tag_list() %}
+        <a href="{{ url_for('education.library', q=tag) }}" class="tag-pill">{{ tag }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Action bar -->
+    <div class="card mt-3" data-aos="fade-up">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-3">
+            <!-- Bookmark -->
+            <form method="POST" action="{{ url_for('education.toggle_bookmark', content_id=ec.id) }}">
+                <button type="submit"
+                        class="btn btn-{{ 'warning' if is_bookmarked else 'outline-warning' }} btn-sm">
+                    <i class="{{ 'fas' if is_bookmarked else 'far' }} fa-bookmark me-1"></i>
+                    {{ 'Bookmarked' if is_bookmarked else 'Save for Later' }}
+                </button>
+            </form>
+            <!-- Back -->
+            <a href="{{ url_for('education.library') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Library
+            </a>
+            {% if current_user.role.value == 'admin' %}
+            <a href="{{ url_for('admin.edit_education', content_id=ec.id) }}"
+               class="btn btn-outline-primary btn-sm ms-auto">
+                <i class="fas fa-pen me-1"></i> Edit
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+</div><!-- /col-lg-8 -->
+
+<!-- ── Sidebar ───────────────────────────────────────── -->
+<div class="col-12 col-lg-4">
+<div class="article-sidebar">
+
+    <!-- About this content -->
+    <div class="sidebar-widget" data-aos="fade-left">
+        <h6>About this {{ ec.content_type.capitalize() }}</h6>
+        <table class="table table-sm table-borderless mb-0" style="font-size:.82rem;">
+            <tr><td class="text-muted">Type</td><td class="fw-medium">{{ ec.content_type.capitalize() }}</td></tr>
+            {% if ec.category %}<tr><td class="text-muted">Category</td><td class="fw-medium">{{ ec.category }}</td></tr>{% endif %}
+            <tr><td class="text-muted">Author</td><td class="fw-medium">{{ ec.author.get_full_name() }}</td></tr>
+            <tr><td class="text-muted">Published</td><td class="fw-medium">{{ ec.created_at.strftime('%b %d, %Y') }}</td></tr>
+            {% if ec.updated_at and ec.updated_at != ec.created_at %}
+            <tr><td class="text-muted">Updated</td><td class="fw-medium">{{ ec.updated_at.strftime('%b %d, %Y') }}</td></tr>
+            {% endif %}
+            <tr><td class="text-muted">Read Time</td><td class="fw-medium">{{ ec.reading_time_label() }}</td></tr>
+            <tr><td class="text-muted">Views</td><td class="fw-medium">{{ ec.view_count }}</td></tr>
+            <tr><td class="text-muted">Audience</td>
+                <td class="fw-medium">
+                    {% if ec.target_audience == 'patients' %}Patients
+                    {% elif ec.target_audience == 'hcps' %}Healthcare Providers
+                    {% else %}Everyone{% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Related Articles -->
+    {% if related %}
+    <div class="sidebar-widget" data-aos="fade-left" data-aos-delay="100">
+        <h6>Related Content</h6>
+        <div class="d-flex flex-column gap-2">
+            {% for r in related %}
+            <a href="{{ url_for('education.article', content_id=r.id) }}" class="text-decoration-none">
+                <div class="related-card">
+                    <div class="rc-thumb">
+                        <i class="fas fa-{{ 'play-circle' if r.content_type == 'video' else 'file-lines' }}"></i>
+                    </div>
+                    <div class="rc-body">
+                        <div class="fw-medium text-dark" style="line-height:1.3;">{{ r.title | truncate(55) }}</div>
+                        <div class="text-muted mt-1">
+                            <i class="fas fa-clock me-1"></i>{{ r.reading_time_label() }}
+                            <span class="ms-2"><i class="fas fa-eye me-1"></i>{{ r.view_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Browse More -->
+    <div class="sidebar-widget" data-aos="fade-left" data-aos-delay="150">
+        <h6>Browse More</h6>
+        <div class="d-grid gap-1">
+            <a href="{{ url_for('education.library') }}" class="btn btn-outline-primary btn-sm text-start">
+                <i class="fas fa-th-large me-1"></i> Full Library
+            </a>
+            <a href="{{ url_for('education.bookmarks') }}" class="btn btn-outline-warning btn-sm text-start">
+                <i class="fas fa-bookmark me-1"></i> My Bookmarks
+            </a>
+            {% if current_user.role.value not in ['patient', 'mother'] %}
+            <a href="{{ url_for('education.submit') }}" class="btn btn-outline-secondary btn-sm text-start">
+                <i class="fas fa-upload me-1"></i> Submit Content
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+</div><!-- /col-lg-4 -->
+</div><!-- /row -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Reading progress bar
+const bar = document.getElementById('readingProgress');
+const body = document.getElementById('articleBody');
+window.addEventListener('scroll', () => {
+    if (!bar || !body) return;
+    const bodyRect = body.getBoundingClientRect();
+    const bodyBottom = bodyRect.bottom + window.scrollY;
+    const progress = Math.min(1, window.scrollY / (bodyBottom - window.innerHeight));
+    bar.style.width = (progress * 100) + '%';
+});
+</script>
+{% endblock %}

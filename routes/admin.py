@@ -6,6 +6,7 @@ from models import (db, User, UserRole, Patient, Message, Alert,
                     AppointmentRequest, AppointmentStatus,
                     EducationContent, EducationStatus,
                     BroadcastMessage, FollowUp, WoundAssessment)
+import math
 from routes.auth import admin_required
 from routes.notifications import push_notification
 from datetime import datetime
@@ -534,38 +535,60 @@ def education():
 @login_required
 @admin_required
 def create_education():
+    from routes.education import CATEGORIES, CONTENT_TYPES
     if request.method == 'POST':
+        body = request.form.get('body', '').strip()
         ec = EducationContent(
-            title=request.form.get('title', '').strip(),
-            body=request.form.get('body', '').strip(),
-            category=request.form.get('category', '').strip() or None,
-            author_id=current_user.id,
-            status=EducationStatus.APPROVED,
-            approved_by_id=current_user.id,
-            published_to_patients=request.form.get('publish') == 'on'
+            title          = request.form.get('title', '').strip(),
+            summary        = request.form.get('summary', '').strip() or None,
+            body           = body,
+            category       = request.form.get('category', '').strip() or None,
+            tags           = request.form.get('tags', '').strip() or None,
+            content_type   = request.form.get('content_type', 'article'),
+            video_url      = request.form.get('video_url', '').strip() or None,
+            thumbnail_url  = request.form.get('thumbnail_url', '').strip() or None,
+            reading_time   = max(1, math.ceil(len(body.split()) / 200)),
+            is_featured    = request.form.get('is_featured') == 'on',
+            target_audience= request.form.get('target_audience', 'all'),
+            author_id      = current_user.id,
+            status         = EducationStatus.APPROVED,
+            approved_by_id = current_user.id,
+            published_to_patients = request.form.get('publish') == 'on'
         )
         db.session.add(ec)
         db.session.commit()
         flash('Education content created.', 'success')
         return redirect(url_for('admin.education'))
-    return render_template('admin/education_form.html', content=None)
+    return render_template('admin/education_form.html', content=None,
+                           categories=CATEGORIES, content_types=CONTENT_TYPES)
 
 
 @admin_bp.route('/education/<int:content_id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_education(content_id):
+    from routes.education import CATEGORIES, CONTENT_TYPES
     ec = EducationContent.query.get_or_404(content_id)
     if request.method == 'POST':
-        ec.title    = request.form.get('title', ec.title).strip()
-        ec.body     = request.form.get('body',  ec.body).strip()
-        ec.category = request.form.get('category', ec.category or '').strip() or None
+        body = request.form.get('body', ec.body).strip()
+        ec.title          = request.form.get('title', ec.title).strip()
+        ec.summary        = request.form.get('summary', ec.summary or '').strip() or None
+        ec.body           = body
+        ec.category       = request.form.get('category', ec.category or '').strip() or None
+        ec.tags           = request.form.get('tags', ec.tags or '').strip() or None
+        ec.content_type   = request.form.get('content_type', ec.content_type or 'article')
+        ec.video_url      = request.form.get('video_url', ec.video_url or '').strip() or None
+        ec.thumbnail_url  = request.form.get('thumbnail_url', ec.thumbnail_url or '').strip() or None
+        ec.reading_time   = max(1, math.ceil(len(body.split()) / 200))
+        ec.is_featured    = request.form.get('is_featured') == 'on'
+        ec.target_audience= request.form.get('target_audience', ec.target_audience or 'all')
         ec.published_to_patients = request.form.get('publish') == 'on'
-        ec.updated_at = datetime.utcnow()
+        ec.updated_at     = datetime.utcnow()
         db.session.commit()
         flash('Content updated.', 'success')
         return redirect(url_for('admin.education'))
-    return render_template('admin/education_form.html', content=ec)
+    return render_template('admin/education_form.html', content=ec,
+                           categories=CATEGORIES, content_types=CONTENT_TYPES)
 
 
 @admin_bp.route('/education/<int:content_id>/approve', methods=['POST'])
@@ -573,10 +596,31 @@ def edit_education(content_id):
 @admin_required
 def approve_education(content_id):
     ec = EducationContent.query.get_or_404(content_id)
-    ec.status = EducationStatus.APPROVED
+    action = request.form.get('action', 'approve')
+    ec.status         = EducationStatus.APPROVED if action == 'approve' else EducationStatus.REJECTED
     ec.approved_by_id = current_user.id
+    # Notify the author
+    push_notification(
+        user_id    = ec.author_id,
+        title      = f'{"✅ Content Approved" if action == "approve" else "❌ Content Rejected"}',
+        message    = f'Your submission "{ec.title}" has been {ec.status.value} by the admin.',
+        notif_type = 'info',
+        link       = url_for('education.library')
+    )
     db.session.commit()
-    flash('Content approved.', 'success')
+    flash(f'Content {ec.status.value}.', 'success')
+    return redirect(url_for('admin.education'))
+
+
+@admin_bp.route('/education/<int:content_id>/feature', methods=['POST'])
+@login_required
+@admin_required
+def feature_education(content_id):
+    ec = EducationContent.query.get_or_404(content_id)
+    ec.is_featured = not (ec.is_featured or False)
+    db.session.commit()
+    state = 'featured' if ec.is_featured else 'unfeatured'
+    flash(f'Content {state}.', 'success')
     return redirect(url_for('admin.education'))
 
 

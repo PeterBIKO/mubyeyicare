@@ -341,11 +341,20 @@ class EducationStatus(enum.Enum):
 
 
 class EducationContent(db.Model):
-    """Educational content — created by HCPs, approved and published by admin."""
+    """Educational content — created by HCPs or admin, approved and published by admin."""
     id         = db.Column(db.Integer, primary_key=True)
     title      = db.Column(db.String(255), nullable=False)
+    summary    = db.Column(db.String(500))           # short abstract shown on cards
     body       = db.Column(db.Text, nullable=False)
     category   = db.Column(db.String(100))
+    tags       = db.Column(db.String(300))           # comma-separated tags
+    content_type = db.Column(db.String(30), default='article')  # article|video|infographic|guideline|quiz
+    thumbnail_url = db.Column(db.String(300))        # cover image URL
+    video_url     = db.Column(db.String(300))        # external video URL (YouTube/Vimeo)
+    reading_time  = db.Column(db.Integer, default=5) # estimated minutes
+    view_count    = db.Column(db.Integer, default=0)
+    is_featured   = db.Column(db.Boolean, default=False)
+    target_audience = db.Column(db.String(20), default='all')   # all|patients|hcps
     author_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status     = db.Column(db.Enum(EducationStatus), default=EducationStatus.DRAFT, nullable=False)
     approved_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -355,9 +364,28 @@ class EducationContent(db.Model):
 
     author      = db.relationship('User', foreign_keys=[author_id], backref='education_posts')
     approved_by = db.relationship('User', foreign_keys=[approved_by_id])
+    bookmarks   = db.relationship('EducationBookmark', backref='content', lazy='dynamic', cascade='all, delete-orphan')
+
+    def tag_list(self):
+        return [t.strip() for t in (self.tags or '').split(',') if t.strip()]
+
+    def reading_time_label(self):
+        mins = self.reading_time or 5
+        return f'{mins} min read'
 
     def __repr__(self):
-        return f'<EducationContent {self.title[:30]} status:{self.status.value}>'
+        return f'<EducationContent {self.title[:30]} type:{self.content_type} status:{self.status.value}>'
+
+
+class EducationBookmark(db.Model):
+    """Users can bookmark education articles to read later."""
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content_id = db.Column(db.Integer, db.ForeignKey('education_content.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='education_bookmarks')
+    __table_args__ = (db.UniqueConstraint('user_id', 'content_id', name='uq_edu_bookmark'),)
 
 
 # ── Broadcast Messages ────────────────────────────────────────────────────────
