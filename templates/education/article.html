@@ -189,7 +189,7 @@
             <a href="{{ url_for('education.library') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Back to Library
             </a>
-            {% if current_user.role.value == 'admin' %}
+            {% if current_user.role.value in ['admin', 'nurse'] %}
             <a href="{{ url_for('admin.edit_education', content_id=ec.id) }}"
                class="btn btn-outline-primary btn-sm ms-auto">
                 <i class="fas fa-pen me-1"></i> Edit

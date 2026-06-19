@@ -68,7 +68,7 @@ def reply(post_id):
 @login_required
 def delete_post(post_id):
     post = PublicMessage.query.get_or_404(post_id)
-    if post.author_id != current_user.id and current_user.role != UserRole.ADMIN:
+    if post.author_id != current_user.id and current_user.role not in [UserRole.ADMIN, UserRole.NURSE]:
         flash('Permission denied.', 'error')
         return redirect(url_for('wall.index'))
     db.session.delete(post)
