@@ -261,6 +261,7 @@ class Alert(db.Model):
     resolved_at = db.Column(db.DateTime)
 
     assigned_hcp = db.relationship('User', foreign_keys=[assigned_hcp_id])
+    alert_patient = db.relationship('Patient', foreign_keys=[patient_id], backref='alerts')
 
     def __repr__(self):
         return f'<Alert Patient:{self.patient_id} Type:{self.alert_type}>'

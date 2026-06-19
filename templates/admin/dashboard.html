@@ -91,7 +91,7 @@
                 <div class="d-flex align-items-start gap-2 p-3 {% if not loop.last %}border-bottom{% endif %}">
                     <span class="badge bg-{{ 'danger' if a.severity in ['High','Critical'] else 'warning text-dark' }} mt-1">{{ a.severity }}</span>
                     <div class="flex-grow-1 small">
-                        <div class="fw-medium">{{ a.patient.get_full_name() }}</div>
+                        <div class="fw-medium">{{ a.alert_patient.get_full_name() if a.alert_patient else 'Unknown Patient' }}</div>
                         <div class="text-muted">{{ a.alert_type }} · {{ a.message | truncate(60) }}</div>
                     </div>
                     <form method="POST" action="{{ url_for('admin.assign_alert_hcp', alert_id=a.id) }}" class="d-flex gap-1">
